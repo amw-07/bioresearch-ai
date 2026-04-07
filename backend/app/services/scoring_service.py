@@ -23,7 +23,7 @@ class ScoringService:
         self, researcher: Researcher, weight_overrides: Optional[Dict[str, float]] = None
     ) -> Tuple[int, Dict[str, float]]:
         _ = weight_overrides
-        relevance_score = int(getattr(researcher, "propensity_score", 0) or 0)
+        relevance_score = int(researcher.relevance_score or 0)
         relevance_tier = researcher.get_priority_tier() if hasattr(researcher, "get_priority_tier") else "UNSCORED"
         return relevance_score, {"relevance_score": float(relevance_score), "relevance_tier": relevance_tier}
 
@@ -36,8 +36,7 @@ class ScoringService:
     ) -> Tuple[int, Dict[str, float]]:
         relevance_score, breakdown = self.score_researcher_sync(researcher, weight_overrides)
         if persist:
-            if hasattr(researcher, "propensity_score"):
-                researcher.propensity_score = relevance_score
+            researcher.relevance_score = relevance_score
             if hasattr(researcher, "update_priority_tier"):
                 researcher.update_priority_tier()
             history = (researcher.enrichment_data or {}).get("score_history", [])

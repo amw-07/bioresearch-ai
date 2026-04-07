@@ -114,27 +114,14 @@ class User(Base):
     last_login_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    leads = relationship("Lead", back_populates="user", cascade="all, delete-orphan")
+    researchers = relationship(
+        "Researcher", back_populates="user", cascade="all, delete-orphan"
+    )
     searches = relationship(
         "Search", back_populates="user", cascade="all, delete-orphan"
     )
     exports = relationship(
         "Export", back_populates="user", cascade="all, delete-orphan"
-    )
-    pipelines = relationship(
-        "Pipeline", back_populates="user", cascade="all, delete-orphan"
-    )
-    webhooks = relationship(
-        "Webhook", back_populates="user", cascade="all, delete-orphan"
-    )
-    team_memberships = relationship(
-        "TeamMembership", back_populates="user", cascade="all, delete-orphan"
-    )
-    usage_events = relationship(
-        "UsageEvent", back_populates="user", cascade="all, delete-orphan"
-    )
-    support_tickets = relationship(
-        "SupportTicket", back_populates="user", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -143,9 +130,9 @@ class User(Base):
         )
 
     # Helper Methods
-    def get_monthly_lead_limit(self) -> int:
+    def get_monthly_researcher_limit(self) -> int:
         """
-        Get the monthly lead limit based on subscription tier
+        Get the monthly researcher limit based on subscription tier
         """
         limits = {
             SubscriptionTier.FREE: 100,
@@ -155,12 +142,12 @@ class User(Base):
         }
         return limits.get(self.subscription_tier, 100)
 
-    def has_reached_lead_limit(self) -> bool:
+    def has_reached_researcher_limit(self) -> bool:
         """
-        Check if user has reached their monthly lead limit
+        Check if user has reached their monthly researcher limit
         """
         leads_this_month = self.usage_stats.get("leads_created_this_month", 0)
-        return leads_this_month >= self.get_monthly_lead_limit()
+        return leads_this_month >= self.get_monthly_researcher_limit()
 
     def increment_usage(self, metric: str, amount: int = 1):
         """

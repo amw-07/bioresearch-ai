@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_active_user, get_db
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 from app.models.user import User
 from app.schemas.base import BulkOperationResponse
 from app.services.scoring_service import DEFAULT_WEIGHTS, get_scoring_service
@@ -51,51 +51,51 @@ class RecalculateRequest(BaseModel):
 
 
 class BulkRecalculateRequest(BaseModel):
-    lead_ids: List[UUID] = Field(..., min_length=1, max_length=500)
+    researcher_ids: List[UUID] = Field(..., min_length=1, max_length=500)
     weights: Optional[ScoreWeights] = None
 
 
-@router.post("/leads/{lead_id}/recalculate", response_model=dict, summary="Recalculate lead score")
-async def recalculate_lead_score(lead_id: UUID, request: RecalculateRequest, current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Lead).where(Lead.id == lead_id, Lead.user_id == current_user.id))
-    lead = result.scalar_one_or_none()
-    if not lead:
-        raise HTTPException(404, "Lead not found")
-    old_score = lead.propensity_score
+@router.post("/researchers/{researcher_id}/recalculate", response_model=dict, summary="Recalculate researcher score")
+async def recalculate_lead_score(researcher_id: UUID, request: RecalculateRequest, current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Researcher).where(Researcher.id == researcher_id, Researcher.user_id == current_user.id))
+    researcher = result.scalar_one_or_none()
+    if not researcher:
+        raise HTTPException(404, "Researcher not found")
+    old_score = researcher.relevance_score
     svc = get_scoring_service()
     if request.override_score is not None:
-        lead.propensity_score = request.override_score
-        lead.update_priority_tier()
+        researcher.relevance_score = request.override_score
+        researcher.update_relevance_tier()
         await db.commit()
-        return {"lead_id": str(lead_id), "old_score": old_score, "new_score": lead.propensity_score, "priority_tier": lead.priority_tier, "method": "manual_override"}
+        return {"researcher_id": str(researcher_id), "old_score": old_score, "new_score": researcher.relevance_score, "relevance_tier": researcher.relevance_tier, "method": "manual_override"}
     weight_overrides = _validate_weight_overrides(request.weights.to_overrides()) if request.weights else None
-    score, breakdown = await svc.score_lead(lead, db, weight_overrides)
-    return {"lead_id": str(lead_id), "old_score": old_score, "new_score": score, "priority_tier": lead.priority_tier, "breakdown": breakdown, "method": "weighted_feature_scoring_v1"}
+    score, breakdown = await svc.score_lead(researcher, db, weight_overrides)
+    return {"researcher_id": str(researcher_id), "old_score": old_score, "new_score": score, "relevance_tier": researcher.relevance_tier, "breakdown": breakdown, "method": "weighted_feature_scoring_v1"}
 
 
-@router.post("/leads/bulk/recalculate", response_model=BulkOperationResponse, summary="Recalculate multiple lead scores")
+@router.post("/researchers/bulk/recalculate", response_model=BulkOperationResponse, summary="Recalculate multiple researcher scores")
 async def bulk_recalculate_scores(request: BulkRecalculateRequest, current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     svc = get_scoring_service()
     weight_overrides = _validate_weight_overrides(request.weights.to_overrides()) if request.weights else None
     success_count = 0
     errors = []
-    result = await db.execute(select(Lead).where(Lead.id.in_(request.lead_ids), Lead.user_id == current_user.id))
-    leads = result.scalars().all()
-    found_ids = {lead.id for lead in leads}
-    for lead in leads:
+    result = await db.execute(select(Researcher).where(Researcher.id.in_(request.researcher_ids), Researcher.user_id == current_user.id))
+    researchers = result.scalars().all()
+    found_ids = {researcher.id for researcher in researchers}
+    for researcher in researchers:
         try:
-            await svc.score_lead(lead, db, weight_overrides)
+            await svc.score_lead(researcher, db, weight_overrides)
             success_count += 1
         except Exception as exc:
-            errors.append({"id": str(lead.id), "error": str(exc)})
+            errors.append({"id": str(researcher.id), "error": str(exc)})
     await db.commit()
-    for lead_id in request.lead_ids:
-        if lead_id not in found_ids:
-            errors.append({"id": str(lead_id), "error": "not_found"})
-    return BulkOperationResponse(success_count=success_count, failure_count=len(errors), total=len(request.lead_ids), errors=errors)
+    for researcher_id in request.researcher_ids:
+        if researcher_id not in found_ids:
+            errors.append({"id": str(researcher_id), "error": "not_found"})
+    return BulkOperationResponse(success_count=success_count, failure_count=len(errors), total=len(request.researcher_ids), errors=errors)
 
 
-@router.post("/leads/all/recalculate", response_model=dict, summary="Rescore all leads for current user")
+@router.post("/researchers/all/recalculate", response_model=dict, summary="Rescore all researchers for current user")
 async def rescore_all_leads(current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     weight_overrides = current_user.preferences.get("scoring_weights") if current_user.preferences else None
     summary = await get_scoring_service().batch_rescore(current_user.id, db, weight_overrides)
@@ -129,14 +129,14 @@ async def update_scoring_config(weights: ScoreWeights, current_user: User = Depe
 async def get_scoring_stats(current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(
-            func.count(Lead.id).label("total"),
-            func.avg(Lead.propensity_score).label("average"),
-            func.min(Lead.propensity_score).label("minimum"),
-            func.max(Lead.propensity_score).label("maximum"),
-        ).where(Lead.user_id == current_user.id)
+            func.count(Researcher.id).label("total"),
+            func.avg(Researcher.relevance_score).label("average"),
+            func.min(Researcher.relevance_score).label("minimum"),
+            func.max(Researcher.relevance_score).label("maximum"),
+        ).where(Researcher.user_id == current_user.id)
     )
     stats = result.first()
-    tier_result = await db.execute(select(Lead.priority_tier, func.count(Lead.id)).where(Lead.user_id == current_user.id).group_by(Lead.priority_tier))
+    tier_result = await db.execute(select(Researcher.relevance_tier, func.count(Researcher.id)).where(Researcher.user_id == current_user.id).group_by(Researcher.relevance_tier))
     distribution = {tier: count for tier, count in tier_result}
     return {
         "total_leads": stats.total or 0,

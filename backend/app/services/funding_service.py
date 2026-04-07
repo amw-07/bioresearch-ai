@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.core.cache import Cache
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
@@ -38,7 +38,7 @@ _BOOST_HIGH_AWARD    = 5
 
 
 class FundingService:
-    """Manages NIH funding data for lead discovery and enrichment."""
+    """Manages NIH funding data for researcher discovery and enrichment."""
 
     def __init__(self) -> None:
         self._available = _SCRAPER_AVAILABLE
@@ -175,17 +175,17 @@ class FundingService:
         return min(boost, 38)
 
     # =========================================================================
-    # PUBLIC - Lead model conversion
+    # PUBLIC - Researcher model conversion
     # =========================================================================
 
-    def convert_to_lead_model(
+    def convert_to_researcher_model(
         self, grant_dict: Dict[str, Any], user_id: str
-    ) -> Lead:
+    ) -> Researcher:
         """
-        Convert a grant dict (from search_leads) to a Lead ORM instance.
+        Convert a grant dict (from search_leads) to a Researcher ORM instance.
         Called by SearchService._dict_to_lead() when source == "funding".
         """
-        lead = Lead(
+        researcher = Researcher(
             user_id=user_id,
             name=grant_dict.get("name", "Unknown"),
             title=grant_dict.get("title", "Principal Investigator"),
@@ -199,9 +199,9 @@ class FundingService:
             status="NEW",
         )
 
-        lead.add_data_source("funding")
+        researcher.add_data_source("funding")
 
-        lead.set_enrichment("nih_grants", {
+        researcher.set_enrichment("nih_grants", {
             "grants":        [grant_dict],
             "total_grants":  1,
             "active_grants": 1 if grant_dict.get("is_active") else 0,
@@ -212,15 +212,15 @@ class FundingService:
         })
 
         # Tags
-        lead.add_tag("nih-funded")
+        researcher.add_tag("nih-funded")
         if grant_dict.get("is_active"):
-            lead.add_tag("active-grant")
+            researcher.add_tag("active-grant")
         if grant_dict.get("uses_3d_models"):
-            lead.add_tag("3d-models-grant")
+            researcher.add_tag("3d-models-grant")
         if grant_dict.get("mechanism", "") in ("R01", "U01", "P01"):
-            lead.add_tag("major-grant")
+            researcher.add_tag("major-grant")
 
-        return lead
+        return researcher
 
     async def get_service_status(self) -> Dict[str, Any]:
         """Return service capability info for /search/status/sources."""

@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class PipelineQualityReport:
 
 
 class DataQualityService:
-    """Validates leads before database insertion."""
+    """Validates researchers before database insertion."""
 
     _KEY_FIELDS = (
         "name",
@@ -47,22 +47,22 @@ class DataQualityService:
         "email",
         "linkedin_url",
         "location",
-        "propensity_score",
+        "relevance_score",
     )
 
-    def validate_lead(self, lead: Dict[str, Any]) -> LeadQualityResult:
+    def validate_lead(self, researcher: Dict[str, Any]) -> LeadQualityResult:
         issues: List[str] = []
         warnings: List[str] = []
         field_scores: Dict[str, bool] = {}
 
-        name = (lead.get("name") or "").strip()
+        name = (researcher.get("name") or "").strip()
         if not name or len(name) < _MIN_NAME_LENGTH:
             issues.append("missing_or_invalid_name")
             field_scores["name"] = False
         else:
             field_scores["name"] = True
 
-        score = lead.get("propensity_score") or 0
+        score = researcher.get("relevance_score") or 0
         try:
             score = int(score)
         except (TypeError, ValueError):
@@ -70,14 +70,14 @@ class DataQualityService:
 
         if score < _MIN_SCORE_TO_SAVE:
             issues.append(f"score_too_low:{score}")
-            field_scores["propensity_score"] = False
+            field_scores["relevance_score"] = False
         elif score > 100:
             warnings.append(f"score_exceeds_100:{score}")
-            field_scores["propensity_score"] = True
+            field_scores["relevance_score"] = True
         else:
-            field_scores["propensity_score"] = True
+            field_scores["relevance_score"] = True
 
-        email = (lead.get("email") or "").strip()
+        email = (researcher.get("email") or "").strip()
         if email:
             if not _EMAIL_RE.match(email):
                 issues.append(f"invalid_email_format:{email[:30]}")
@@ -87,7 +87,7 @@ class DataQualityService:
         else:
             field_scores["email"] = False
 
-        linkedin = (lead.get("linkedin_url") or "").strip()
+        linkedin = (researcher.get("linkedin_url") or "").strip()
         if linkedin:
             if not _LINKEDIN_URL_RE.match(linkedin):
                 warnings.append(f"suspicious_linkedin_url:{linkedin[:60]}")
@@ -97,15 +97,15 @@ class DataQualityService:
         else:
             field_scores["linkedin_url"] = False
 
-        company = (lead.get("company") or "").strip()
+        company = (researcher.get("company") or "").strip()
         field_scores["company"] = bool(company)
         if not company:
             warnings.append("missing_company")
 
-        title = (lead.get("title") or "").strip()
+        title = (researcher.get("title") or "").strip()
         field_scores["title"] = bool(title)
 
-        location = (lead.get("location") or "").strip()
+        location = (researcher.get("location") or "").strip()
         field_scores["location"] = bool(location)
 
         present = sum(1 for value in field_scores.values() if value)
@@ -124,7 +124,7 @@ class DataQualityService:
 
     def validate_batch(
         self,
-        leads: List[Dict[str, Any]],
+        researchers: List[Dict[str, Any]],
         deduplicate: bool = True,
     ) -> Tuple[List[Dict[str, Any]], PipelineQualityReport]:
         seen_names = set()
@@ -132,24 +132,24 @@ class DataQualityService:
         rejection_counts: Dict[str, int] = {}
         completeness_sum = 0.0
 
-        for lead in leads:
-            norm_name = _normalise_name(lead.get("name") or "")
+        for researcher in researchers:
+            norm_name = _normalise_name(researcher.get("name") or "")
             if deduplicate and norm_name and norm_name in seen_names:
                 _increment(rejection_counts, "duplicate_name")
                 continue
 
-            result = self.validate_lead(lead)
+            result = self.validate_lead(researcher)
             completeness_sum += result.completeness
 
             if result.passes:
-                passing.append(lead)
+                passing.append(researcher)
                 if norm_name:
                     seen_names.add(norm_name)
             else:
                 for issue in result.issues:
                     _increment(rejection_counts, issue.split(":")[0])
 
-        total = len(leads)
+        total = len(researchers)
         passed = len(passing)
         report = PipelineQualityReport(
             total_candidates=total,
@@ -160,22 +160,22 @@ class DataQualityService:
         )
 
         logger.info(
-            "DataQuality: %d/%d leads passed (%.0f%% completeness avg)",
+            "DataQuality: %d/%d researchers passed (%.0f%% completeness avg)",
             passed,
             total,
             (completeness_sum / total) * 100 if total else 0,
         )
         return passing, report
 
-    def check_existing_lead(self, lead: Lead) -> LeadQualityResult:
+    def check_existing_researcher(self, researcher: Researcher) -> LeadQualityResult:
         lead_dict = {
-            "name": lead.name,
-            "title": lead.title,
-            "company": lead.company,
-            "email": lead.email,
-            "linkedin_url": lead.linkedin_url,
-            "location": lead.location,
-            "propensity_score": lead.propensity_score,
+            "name": researcher.name,
+            "title": researcher.title,
+            "company": researcher.company,
+            "email": researcher.email,
+            "linkedin_url": researcher.linkedin_url,
+            "location": researcher.location,
+            "relevance_score": researcher.relevance_score,
         }
         return self.validate_lead(lead_dict)
 

@@ -454,10 +454,10 @@ class DataValidator:
 
 def validate_lead_data(data: Dict[str, Any]) -> tuple[bool, List[str]]:
     """
-    Validate lead creation/update data
+    Validate researcher creation/update data
 
     Args:
-        data: Lead data dictionary
+        data: Researcher data dictionary
 
     Returns:
         Tuple of (is_valid, list of error messages)
@@ -489,8 +489,8 @@ def validate_lead_data(data: Dict[str, Any]) -> tuple[bool, List[str]]:
             errors.append(error)
 
     # Score validation (optional)
-    if data.get("propensity_score") is not None:
-        is_valid, error = DataValidator.validate_score(data["propensity_score"])
+    if data.get("relevance_score") is not None:
+        is_valid, error = DataValidator.validate_score(data["relevance_score"])
         if not is_valid:
             errors.append(error)
 

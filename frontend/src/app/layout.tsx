@@ -6,38 +6,20 @@ import { Toaster } from '@/components/ui/toaster'
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'Biotech Lead Generator - Find & Score Research Prospects',
-    template: '%s | Biotech Lead Generator',
+    default: 'BioResearch AI — Biotech Research Intelligence',
+    template: '%s | BioResearch AI',
   },
   description:
-    'AI-powered lead generation for biotech and pharma business development. Find, enrich, and score researchers interested in 3D in-vitro models and drug discovery tools.',
+    'AI-powered biotech research intelligence. Discover and rank researchers by relevance using XGBoost, sentence-transformers, and SHAP explanations.',
   keywords: [
-    'biotech lead generation',
-    'pharma business development',
-    '3D in-vitro models leads',
-    'drug discovery prospects',
-    'PubMed lead scoring',
-    'toxicology researcher leads',
+    'biotech research intelligence',
+    'researcher discovery',
+    'drug discovery AI',
+    'DILI research',
+    'organoid research',
+    'semantic search biotech',
   ],
-  authors: [{ name: 'Biotech Lead Generator' }],
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'Biotech Lead Generator',
-    title: 'Biotech Lead Generator - Find & Score Research Prospects',
-    description:
-      'Find biotech and pharma researchers interested in 3D in-vitro models. AI-powered scoring and enrichment from PubMed, NIH, and conference data.',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Biotech Lead Generator',
-    description: 'AI-powered lead generation for biotech BD teams.',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
+  authors: [{ name: 'BioResearch AI' }],
 }
 
 export default function RootLayout({

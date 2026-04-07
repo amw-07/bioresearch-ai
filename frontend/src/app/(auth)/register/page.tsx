@@ -104,7 +104,7 @@ export default function RegisterPage() {
       >
         <div className="mb-6">
           <h1 className="font-syne text-2xl font-700 text-white tracking-tight">Create account</h1>
-          <p className="text-sm text-zinc-500 mt-1">Free forever up to 100 leads</p>
+          <p className="text-sm text-zinc-500 mt-1">Free forever up to 100 researchers</p>
         </div>
 
         <form

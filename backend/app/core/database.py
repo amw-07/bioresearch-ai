@@ -174,7 +174,7 @@ async def init_db() -> None:
     """
     async with async_engine.begin() as conn:
         # Import all models here
-        from app.models import export, lead, pipeline, search, user
+        from app.models import export, researcher, search, user
 
         # Create all tables
         await conn.run_sync(Base.metadata.create_all)
@@ -194,7 +194,7 @@ def init_db_sync() -> None:
     Used by Alembic and scripts
     """
     # Import all models
-    from app.models import export, lead, pipeline, search, user
+    from app.models import export, researcher, search, user
 
     # Create all tables
     Base.metadata.create_all(bind=sync_engine)

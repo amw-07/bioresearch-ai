@@ -313,7 +313,7 @@ class DataFormatter:
     @staticmethod
     def format_score(score: Optional[int], max_score: int = 100) -> Optional[str]:
         """
-        Format propensity score with visual indicator
+        Format relevance score with visual indicator
 
         Args:
             score: Score value
@@ -444,7 +444,7 @@ class DataFormatter:
 
 # Convenience functions
 def format_lead_name(lead_data: Dict[str, Any]) -> str:
-    """Format lead name with title"""
+    """Format researcher name with title"""
     return DataFormatter.format_name(
         first_name=lead_data.get("name", "").split()[0] if lead_data.get("name") else None,
         last_name=" ".join(lead_data.get("name", "").split()[1:]) if lead_data.get("name") and len(lead_data.get("name", "").split()) > 1 else None,

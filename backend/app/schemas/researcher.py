@@ -1,5 +1,5 @@
 """
-Lead Schemas - Lead creation, updates, and responses
+Researcher Schemas — researcher creation, updates, and responses
 """
 
 from datetime import datetime
@@ -18,7 +18,7 @@ from app.schemas.base import (BaseSchema, PaginationParams, SortParams,
 
 class ResearcherCreate(BaseModel):
     """
-    Create new lead
+    Create new researcher
     """
 
     name: str = Field(..., min_length=2, max_length=255, description="Full name")
@@ -107,7 +107,7 @@ class ResearcherCreate(BaseModel):
 
 class ResearcherUpdate(BaseModel):
     """
-    Update existing lead
+    Update existing researcher
     """
 
     name: Optional[str] = Field(None, min_length=2, max_length=255)
@@ -169,7 +169,7 @@ class ResearcherUpdate(BaseModel):
 
 class ResearcherBase(BaseSchema):
     """
-    Base lead information
+    Base researcher information
     """
 
     id: UUID
@@ -203,7 +203,7 @@ class ResearcherBase(BaseSchema):
 
 class ResearcherDetail(TimestampSchema):
     """
-    Detailed lead information
+    Detailed researcher information
     """
 
     id: UUID
@@ -274,7 +274,7 @@ class ResearcherDetail(TimestampSchema):
 
 class ResearcherList(BaseModel):
     """
-    Simplified lead for list view
+    Simplified researcher for list view
     """
 
     id: UUID
@@ -312,15 +312,15 @@ class ResearcherList(BaseModel):
 
 class ResearcherFilters(BaseModel):
     """
-    Lead filtering parameters
+    Researcher filtering parameters
     """
 
     search: Optional[str] = Field(None, description="Search in name, title, company")
     min_score: Optional[int] = Field(
-        None, ge=0, le=100, description="Minimum propensity score"
+        None, ge=0, le=100, description="Minimum relevance score"
     )
     max_score: Optional[int] = Field(
-        None, ge=0, le=100, description="Maximum propensity score"
+        None, ge=0, le=100, description="Maximum relevance score"
     )
     relevance_tier: Optional[str] = Field(None, pattern="^(HIGH|MEDIUM|LOW)$")
     status: Optional[str] = None
@@ -356,7 +356,7 @@ class ResearcherFilters(BaseModel):
 
 class ResearcherQuery(PaginationParams, SortParams):
     """
-    Combined lead query parameters
+    Combined researcher query parameters
     """
 
     filters: ResearcherFilters = Field(default_factory=ResearcherFilters)
@@ -381,19 +381,19 @@ class ResearcherQuery(PaginationParams, SortParams):
 
 class ResearcherBulkCreate(BaseModel):
     """
-    Bulk create leads
+    Bulk create researchers
     """
 
-    leads: List[ResearcherCreate] = Field(..., min_length=1, max_length=100)
+    researchers: List[ResearcherCreate] = Field(..., min_length=1, max_length=100)
     skip_duplicates: bool = Field(default=True, description="Skip duplicate emails")
     calculate_scores: bool = Field(
-        default=True, description="Calculate propensity scores"
+        default=True, description="Calculate relevance scores"
     )
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "leads": [
+                "researchers": [
                     {
                         "name": "Dr. Sarah Mitchell",
                         "title": "Director of Toxicology",
@@ -410,10 +410,10 @@ class ResearcherBulkCreate(BaseModel):
 
 class ResearcherScoreUpdate(BaseModel):
     """
-    Update lead score
+    Update researcher score
     """
 
-    relevance_score: int = Field(..., ge=0, le=100, description="New propensity score")
+    relevance_score: int = Field(..., ge=0, le=100, description="New relevance score")
     recalculate: bool = Field(default=False, description="Recalculate using algorithm")
 
     model_config = {

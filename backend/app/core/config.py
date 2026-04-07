@@ -148,12 +148,12 @@ class Settings(BaseSettings):
 
     # Hunter.io — Email finding (FREE: 25 searches/month, no credit card)
     # Get key: https://hunter.io → Sign up free → Dashboard → API
-    # Used ONLY for leads with propensity_score >= 70 (HIGH tier)
+    # Used ONLY for researchers with relevance_score >= 70 (HIGH tier)
     HUNTER_API_KEY: Optional[str] = None
 
     # Clearbit — Company enrichment (FREE: 50 lookups/month, no credit card)
     # Get key: https://clearbit.com → Start for free → Dashboard → API Keys
-    # Used ONLY for pharma/unknown leads with propensity_score >= 50
+    # Used ONLY for pharma/unknown researchers with relevance_score >= 50
     CLEARBIT_API_KEY: Optional[str] = None
     CRUNCHBASE_API_KEY: Optional[str] = None
 
@@ -171,10 +171,10 @@ class Settings(BaseSettings):
     TEAM_TIER_LEADS_PER_MONTH: int = 5000
 
     TIER_LIMITS: dict = {
-        "free": {"leads": 100, "searches": 50, "exports": 10, "api_calls": 500},
-        "pro": {"leads": 1000, "searches": 500, "exports": 100, "api_calls": 5000},
-        "team": {"leads": 5000, "searches": 2000, "exports": 500, "api_calls": 20000},
-        "enterprise": {"leads": 999999, "searches": 999999, "exports": 999999, "api_calls": 999999},
+        "free": {"researchers": 100, "searches": 50, "exports": 10, "api_calls": 500},
+        "pro": {"researchers": 1000, "searches": 500, "exports": 100, "api_calls": 5000},
+        "team": {"researchers": 5000, "searches": 2000, "exports": 500, "api_calls": 20000},
+        "enterprise": {"researchers": 999999, "searches": 999999, "exports": 999999, "api_calls": 999999},
     }
 
     # Scoring Weights

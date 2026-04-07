@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models.export import Export, ExportFormat, ExportStatus
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 from app.models.user import User
 from app.utils.storage import get_storage_service
 
@@ -100,18 +100,18 @@ class ExportService:
             export.mark_as_processing()
             await db.commit()
 
-            # Get leads with filters
-            leads = await self._get_leads_for_export(
+            # Get researchers with filters
+            researchers = await self._get_leads_for_export(
                 user_id=export.user_id, filters=export.filters, db=db
             )
 
-            export.records_count = len(leads)
+            export.records_count = len(researchers)
 
-            if not leads:
-                raise ValueError("No leads match the filters")
+            if not researchers:
+                raise ValueError("No researchers match the filters")
 
             # Convert to DataFrame
-            df = self._leads_to_dataframe(leads, export.columns)
+            df = self._leads_to_dataframe(researchers, export.columns)
 
             # Generate file based on format
             file_data = await self._generate_file(df, export.format)
@@ -148,55 +148,55 @@ class ExportService:
 
     async def _get_leads_for_export(
         self, user_id: UUID, filters: Dict[str, Any], db: AsyncSession
-    ) -> List[Lead]:
-        """Get leads matching filters"""
+    ) -> List[Researcher]:
+        """Get researchers matching filters"""
         from sqlalchemy import or_
 
-        query = select(Lead).where(Lead.user_id == user_id)
+        query = select(Researcher).where(Researcher.user_id == user_id)
 
         # Apply filters
         if "min_score" in filters:
-            query = query.where(Lead.propensity_score >= filters["min_score"])
+            query = query.where(Researcher.relevance_score >= filters["min_score"])
 
         if "max_score" in filters:
-            query = query.where(Lead.propensity_score <= filters["max_score"])
+            query = query.where(Researcher.relevance_score <= filters["max_score"])
 
-        if "priority_tier" in filters:
-            query = query.where(Lead.priority_tier == filters["priority_tier"])
+        if "relevance_tier" in filters:
+            query = query.where(Researcher.relevance_tier == filters["relevance_tier"])
 
         if "status" in filters:
-            query = query.where(Lead.status == filters["status"])
+            query = query.where(Researcher.status == filters["status"])
 
         if "location" in filters:
-            query = query.where(Lead.location.ilike(f"%{filters['location']}%"))
+            query = query.where(Researcher.location.ilike(f"%{filters['location']}%"))
 
         if "company" in filters:
-            query = query.where(Lead.company.ilike(f"%{filters['company']}%"))
+            query = query.where(Researcher.company.ilike(f"%{filters['company']}%"))
 
         if "has_email" in filters:
             if filters["has_email"]:
-                query = query.where(Lead.email.isnot(None))
+                query = query.where(Researcher.email.isnot(None))
             else:
-                query = query.where(Lead.email.is_(None))
+                query = query.where(Researcher.email.is_(None))
 
         if "has_publication" in filters:
-            query = query.where(Lead.recent_publication == filters["has_publication"])
+            query = query.where(Researcher.recent_publication == filters["has_publication"])
 
         # Order by score
-        query = query.order_by(Lead.propensity_score.desc())
+        query = query.order_by(Researcher.relevance_score.desc())
 
         result = await db.execute(query)
         return result.scalars().all()
 
     def _leads_to_dataframe(
-        self, leads: List[Lead], columns: Optional[List[str]] = None
+        self, researchers: List[Researcher], columns: Optional[List[str]] = None
     ) -> pd.DataFrame:
-        """Convert leads to pandas DataFrame"""
+        """Convert researchers to pandas DataFrame"""
         # Default columns
         default_columns = [
             "rank",
-            "propensity_score",
-            "priority_tier",
+            "relevance_score",
+            "relevance_tier",
             "name",
             "title",
             "company",
@@ -219,13 +219,13 @@ class ExportService:
         # Use specified columns or defaults
         cols = columns if columns else default_columns
 
-        # Convert leads to dict
+        # Convert researchers to dict
         data = []
-        for lead in leads:
+        for researcher in researchers:
             lead_dict = {}
             for col in cols:
-                if hasattr(lead, col):
-                    value = getattr(lead, col)
+                if hasattr(researcher, col):
+                    value = getattr(researcher, col)
 
                     # Format specific types
                     if isinstance(value, datetime):
@@ -242,8 +242,8 @@ class ExportService:
         # Rename columns for readability
         column_rename = {
             "rank": "Rank",
-            "propensity_score": "Score",
-            "priority_tier": "Priority",
+            "relevance_score": "Score",
+            "relevance_tier": "Priority",
             "name": "Name",
             "title": "Title",
             "company": "Company",
@@ -291,10 +291,10 @@ class ExportService:
         output = BytesIO()
 
         with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-            df.to_excel(writer, sheet_name="Leads", index=False)
+            df.to_excel(writer, sheet_name="Researchers", index=False)
 
             workbook = writer.book
-            worksheet = writer.sheets["Leads"]
+            worksheet = writer.sheets["Researchers"]
 
             # Header format
             header_format = workbook.add_format(

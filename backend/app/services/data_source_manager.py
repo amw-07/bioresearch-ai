@@ -9,7 +9,7 @@ import logging
 from enum import Enum
 from typing import Dict, List, Optional, Set
 
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 from app.services.conference_service import get_conference_service
 from app.services.funding_service import get_funding_service
 from app.services.linkedin_service import get_linkedin_service
@@ -27,7 +27,7 @@ class DataSourceType(str, Enum):
 
 
 class DataSourceManager:
-    """Orchestrates multiple data sources for lead discovery."""
+    """Orchestrates multiple data sources for researcher discovery."""
 
     def __init__(self) -> None:
         self.pubmed_service = get_pubmed_service()
@@ -64,7 +64,7 @@ class DataSourceManager:
             if not self.is_source_available(source):
                 results[source.value] = {
                     "error": f"{source.value} not yet available",
-                    "leads": [],
+                    "researchers": [],
                     "available_from": _step_for_source(source),
                 }
                 continue
@@ -105,9 +105,9 @@ class DataSourceManager:
             for (source, _), result in zip(tasks, search_results):
                 if isinstance(result, Exception):
                     logger.error("Source %s error: %s", source.value, result)
-                    results[source.value] = {"error": str(result), "leads": []}
+                    results[source.value] = {"error": str(result), "researchers": []}
                 else:
-                    results[source.value] = {"error": None, "leads": result}
+                    results[source.value] = {"error": None, "researchers": result}
 
         return results
 
@@ -116,12 +116,12 @@ class DataSourceManager:
         seen_names: Set[str] = set()
 
         for source, source_data in search_results.items():
-            for lead in source_data.get("leads", []):
-                name = (lead.get("name") or "").strip().lower()
+            for researcher in source_data.get("researchers", []):
+                name = (researcher.get("name") or "").strip().lower()
                 if deduplicate and name in seen_names:
                     continue
-                lead.setdefault("data_sources", []).append(source)
-                all_leads.append(lead)
+                researcher.setdefault("data_sources", []).append(source)
+                all_leads.append(researcher)
                 seen_names.add(name)
         return all_leads
 
@@ -132,7 +132,7 @@ class DataSourceManager:
         user_id: str,
         max_results_per_source: int = 50,
         **kwargs,
-    ) -> List[Lead]:
+    ) -> List[Researcher]:
         search_results = await self.search(
             query=query,
             sources=sources,
@@ -141,16 +141,16 @@ class DataSourceManager:
         )
         aggregated = await self.aggregate_results(search_results, deduplicate=True)
 
-        leads = []
+        researchers = []
         for lead_dict in aggregated:
             sources_used = lead_dict.get("data_sources", [])
             if "pubmed" in sources_used:
-                leads.append(self.pubmed_service.convert_to_lead_model(lead_dict, user_id))
+                researchers.append(self.pubmed_service.convert_to_researcher_model(lead_dict, user_id))
             elif "conference" in sources_used:
-                leads.append(self.conference_service.convert_to_lead_model(lead_dict, user_id))
+                researchers.append(self.conference_service.convert_to_researcher_model(lead_dict, user_id))
             elif "funding" in sources_used:
-                leads.append(self.funding_service.convert_to_lead_model(lead_dict, user_id))
-        return leads
+                researchers.append(self.funding_service.convert_to_researcher_model(lead_dict, user_id))
+        return researchers
 
     def is_source_available(self, source: DataSourceType) -> bool:
         return self.available_sources.get(source, False)

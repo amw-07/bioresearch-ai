@@ -216,7 +216,7 @@ def generate_api_key(prefix: str = "btlg", length: int = 32) -> str:
     Generate a secure API key
 
     Args:
-        prefix: Key prefix (default: "btlg" for Biotech Lead Generator)
+        prefix: Key prefix (default: "btlg" for Biotech Researcher Generator)
         length: Length of random part
 
     Returns:

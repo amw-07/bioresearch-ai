@@ -35,7 +35,7 @@ async def get_dashboard_stats(
     high_relevance_researchers = await db.scalar(
         select(sa_func.count(Researcher.id)).where(
             accessible_researchers,
-            Researcher.propensity_score >= 70,
+            Researcher.relevance_score >= 70,
         )
     )
 
@@ -48,9 +48,9 @@ async def get_dashboard_stats(
     )
 
     average_score = await db.scalar(
-        select(sa_func.avg(Researcher.propensity_score)).where(
+        select(sa_func.avg(Researcher.relevance_score)).where(
             accessible_researchers,
-            Researcher.propensity_score.isnot(None),
+            Researcher.relevance_score.isnot(None),
         )
     )
 

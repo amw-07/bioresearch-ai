@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from app.core.cache import Cache
 from app.core.config import settings
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 
 if TYPE_CHECKING:
     from app.services.quota_manager import QuotaManager
@@ -54,16 +54,16 @@ class CompanyEnricher:
     async def enrich_company(
         self,
         company_name: str,
-        lead: Optional[Lead] = None,
+        researcher: Optional[Researcher] = None,
         quota_manager: Optional["QuotaManager"] = None,
     ) -> Dict[str, Any]:
-        if lead:
-            nih_result = self._try_nih_company_data(lead)
+        if researcher:
+            nih_result = self._try_nih_company_data(researcher)
             if nih_result:
                 return nih_result
 
-        if self._clearbit_key and quota_manager and lead:
-            if await self._should_call_clearbit(lead, quota_manager):
+        if self._clearbit_key and quota_manager and researcher:
+            if await self._should_call_clearbit(researcher, quota_manager):
                 domain = _extract_domain_from_company(company_name)
                 if domain:
                     clearbit = await self._call_clearbit(domain, quota_manager)
@@ -73,13 +73,13 @@ class CompanyEnricher:
         return self._structural_mock(company_name)
 
     @staticmethod
-    def _try_nih_company_data(lead: Lead) -> Optional[Dict[str, Any]]:
-        grants = (lead.enrichment_data or {}).get("nih_grants", {}).get("grants", [])
+    def _try_nih_company_data(researcher: Researcher) -> Optional[Dict[str, Any]]:
+        grants = (researcher.enrichment_data or {}).get("nih_grants", {}).get("grants", [])
         if not grants:
             return None
         best = max(grants, key=lambda g: (g.get("is_active", False), g.get("award_amount", 0) or 0))
         return {
-            "name": best.get("company", lead.company or ""),
+            "name": best.get("company", researcher.company or ""),
             "domain": "",
             "industry": "Academic/Research",
             "size": None,
@@ -95,15 +95,15 @@ class CompanyEnricher:
             "source": "nih_reporter",
         }
 
-    async def _should_call_clearbit(self, lead: Lead, quota_manager: "QuotaManager") -> bool:
+    async def _should_call_clearbit(self, researcher: Researcher, quota_manager: "QuotaManager") -> bool:
         from app.services.contact_service import _get_institution_type
 
-        if _get_institution_type(lead) == "academic":
+        if _get_institution_type(researcher) == "academic":
             return False
-        current_funding = lead.company_funding or "Unknown"
+        current_funding = researcher.company_funding or "Unknown"
         if current_funding not in ("Unknown", "", None):
             return False
-        score = lead.propensity_score or 0
+        score = researcher.relevance_score or 0
         if score < settings.CLEARBIT_MIN_SCORE_FOR_API:
             return False
         return await quota_manager.can_use_clearbit(score)

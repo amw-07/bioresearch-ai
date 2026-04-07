@@ -63,7 +63,7 @@ class Search(Base):
     results_count = Column(Integer, default=0, nullable=False)
 
     results_snapshot = Column(JSONB, default=list, nullable=False)
-    # Array of lead IDs that were returned
+    # Array of researcher IDs that were returned
     # Example: ["uuid1", "uuid2", "uuid3"]
 
     # Saved Searches

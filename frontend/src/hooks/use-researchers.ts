@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast'
 
 const toResearcher = (r: any): Researcher => ({
   ...r,
-  relevance_score: r.relevance_score ?? r.propensity_score ?? null,
+  relevance_score: r.relevance_score ?? null,
   relevance_tier: r.relevance_tier ?? r.priority_tier ?? 'UNSCORED',
 })
 

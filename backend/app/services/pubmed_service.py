@@ -32,7 +32,7 @@ from typing import Any, Dict, List, Optional
 
 from app.core.cache import Cache
 from app.core.config import settings
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 
 # ── Phase 1 scraper import (unchanged) ──────────────────────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
@@ -118,8 +118,8 @@ class PubMedService:
     Production-ready PubMed service.
 
     Provides two modes:
-      1. Lead discovery  — search_leads() / search_multiple_queries()
-      2. Lead enrichment — get_author_profile() [NEW in Phase 2.3]
+      1. Researcher discovery  — search_leads() / search_multiple_queries()
+      2. Researcher enrichment — get_author_profile() [NEW in Phase 2.3]
     """
 
     def __init__(self) -> None:
@@ -191,7 +191,7 @@ class PubMedService:
                 return cached
 
         loop = asyncio.get_event_loop()
-        leads = await loop.run_in_executor(
+        researchers = await loop.run_in_executor(
             None,
             self._search_sync,
             enriched_query,
@@ -199,11 +199,11 @@ class PubMedService:
             years_back,
         )
 
-        if leads:
-            await Cache.set(cache_key, leads, ttl=_TTL_SEARCH_RESULTS)
-            logger.info("PubMed search '%s' → %d leads (cached 24h)", query[:60], len(leads))
+        if researchers:
+            await Cache.set(cache_key, researchers, ttl=_TTL_SEARCH_RESULTS)
+            logger.info("PubMed search '%s' → %d researchers (cached 24h)", query[:60], len(researchers))
 
-        return leads
+        return researchers
 
     async def search_multiple_queries(
         self,
@@ -217,16 +217,16 @@ class PubMedService:
         seen_names: set = set()
 
         for query in queries:
-            leads = await self.search_leads(
+            researchers = await self.search_leads(
                 query=query,
                 max_results=max_results_per_query,
                 years_back=years_back,
                 **filter_kwargs,
             )
-            for lead in leads:
-                name = (lead.get("name") or "").strip()
+            for researcher in researchers:
+                name = (researcher.get("name") or "").strip()
                 if name and name not in seen_names:
-                    all_leads.append(lead)
+                    all_leads.append(researcher)
                     seen_names.add(name)
 
         return all_leads
@@ -630,9 +630,9 @@ class PubMedService:
         except (TypeError, ValueError):
             return None
 
-    def convert_to_lead_model(self, pubmed_lead: Dict, user_id: str) -> Lead:
-        """Convert a PubMed search result dict to a Lead ORM instance."""
-        lead = Lead(
+    def convert_to_researcher_model(self, pubmed_lead: Dict, user_id: str) -> Researcher:
+        """Convert a PubMed search result dict to a Researcher ORM instance."""
+        researcher = Researcher(
             user_id=user_id,
             name=pubmed_lead.get("name", "Unknown"),
             title=pubmed_lead.get("title", "Principal Investigator"),
@@ -649,8 +649,8 @@ class PubMedService:
             uses_3d_models=pubmed_lead.get("uses_3d_models", True),
             status="NEW",
         )
-        lead.add_data_source("pubmed")
-        lead.set_enrichment(
+        researcher.add_data_source("pubmed")
+        researcher.set_enrichment(
             "pubmed",
             {
                 "pmid": pubmed_lead.get("pubmed_id"),
@@ -658,7 +658,7 @@ class PubMedService:
                 "search_date": datetime.utcnow().isoformat(),
             },
         )
-        return lead
+        return researcher
 
     async def get_service_status(self) -> Dict:
         return {

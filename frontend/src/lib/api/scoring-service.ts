@@ -11,8 +11,8 @@ export const scoringService = {
   async getStats() {
     return (await apiClient.get(API_ENDPOINTS.SCORE_STATS)).data
   },
-  async rescoreLead(id: string) {
-    return (await apiClient.post(API_ENDPOINTS.SCORE_LEAD(id), {})).data
+  async rescoreResearcher(id: string) {
+    return (await apiClient.post(API_ENDPOINTS.SCORE_RESEARCHER(id), {})).data
   },
   async rescoreAll() {
     return (await apiClient.post(API_ENDPOINTS.SCORE_ALL)).data

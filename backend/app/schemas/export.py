@@ -28,7 +28,7 @@ class ExportCreate(BaseModel):
             "example": {
                 "format": "excel",
                 "filters": {"min_score": 70},
-                "columns": ["name", "email", "company", "propensity_score"],
+                "columns": ["name", "email", "company", "relevance_score"],
             }
         }
     }
