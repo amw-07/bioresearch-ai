@@ -94,7 +94,7 @@ class Export(Base):
 
     columns = Column(JSONB, default=list, nullable=False)
     # Columns included in export
-    # Example: ["name", "email", "company", "propensity_score"]
+    # Example: ["name", "email", "company", "relevance_score"]
 
     # Error Handling
     error_message = Column(String(500), nullable=True)

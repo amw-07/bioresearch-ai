@@ -92,7 +92,7 @@ class EnrichmentService:
 
         result = await get_company_enricher().enrich_company(
             company_name=company_name,
-            lead=researcher,
+            researcher=researcher,
             quota_manager=get_quota_manager(),
         )
         await Cache.set(cache_key, result, ttl=86_400)
@@ -103,7 +103,7 @@ class EnrichmentService:
         return result if result.get("url") else None
 
     async def _enrich_pubmed(self, researcher: Researcher, db: AsyncSession) -> dict:
-        return await get_pubmed_enrichment_service().enrich_lead_pubmed(lead=researcher, db=db)
+        return await get_pubmed_enrichment_service().enrich_lead_pubmed(researcher=researcher, db=db)
 
     async def _apply_enrichments(self, researcher: Researcher, enrichments: Dict[str, Any], db: AsyncSession):
         if "email" in enrichments and enrichments["email"] and enrichments["email"].get("email"):

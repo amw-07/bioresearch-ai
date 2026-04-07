@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.core.cache import Cache
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 
 # ── Import src-layer scrapers ─────────────────────────────────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
@@ -44,7 +44,7 @@ _RELEVANCE_KEYWORDS = [
 
 class ConferenceService:
     """
-    Manages conference speaker data for lead generation.
+    Manages conference speaker data for researcher generation.
 
     Two modes:
       1. search_leads(query)          - query-filtered, used by search endpoint
@@ -71,13 +71,13 @@ class ConferenceService:
         max_results: int = 50,
     ) -> List[Dict[str, Any]]:
         """
-        Search conference speaker data for leads matching a query.
+        Search conference speaker data for researchers matching a query.
 
         Workflow:
           1. For each conference: check Redis → if miss, scrape + cache 365d
           2. Pool all speakers
           3. Score relevance against query + domain keywords
-          4. Return top-N leads sorted by score descending
+          4. Return top-N researchers sorted by score descending
         """
         if not self._available:
             return []
@@ -109,16 +109,16 @@ class ConferenceService:
         scored = [(s, sp) for s, sp in scored if s > 0]
         scored.sort(key=lambda x: x[0], reverse=True)
 
-        leads = [
+        researchers = [
             self._convert_to_lead_dict(sp, score)
             for score, sp in scored[:max_results]
         ]
 
         logger.info(
             "ConferenceService: query '%s' → %d/%d speakers matched",
-            query[:50], len(leads), len(all_speakers),
+            query[:50], len(researchers), len(all_speakers),
         )
-        return leads
+        return researchers
 
     async def get_all_speakers(
         self,
@@ -133,20 +133,20 @@ class ConferenceService:
         return await self._get_speakers(conference_key, year)
 
     # =========================================================================
-    # PUBLIC - Lead conversion
+    # PUBLIC - Researcher conversion
     # =========================================================================
 
-    def convert_to_lead_model(
+    def convert_to_researcher_model(
         self,
         conference_lead: Dict[str, Any],
         user_id: str,
-    ) -> Lead:
+    ) -> Researcher:
         """
-        Convert a conference lead dict to a Lead ORM instance.
+        Convert a conference researcher dict to a Researcher ORM instance.
         Called by DataSourceManager.search_and_convert_to_leads()
         and SearchService._dict_to_lead().
         """
-        lead = Lead(
+        researcher = Researcher(
             user_id=user_id,
             name=conference_lead.get("name", "Unknown"),
             title=conference_lead.get("title", "Speaker"),
@@ -158,9 +158,9 @@ class ConferenceService:
             status="NEW",
         )
 
-        lead.add_data_source("conference")
+        researcher.add_data_source("conference")
 
-        lead.set_enrichment("conference", {
+        researcher.set_enrichment("conference", {
             "conference_name":    conference_lead.get("conference_name", ""),
             "conference_key":     conference_lead.get("conference_key", ""),
             "conference_year":    conference_lead.get("conference_year"),
@@ -172,13 +172,13 @@ class ConferenceService:
             "scraped_at":         datetime.utcnow().isoformat(),
         })
 
-        lead.add_tag("conference-speaker")
+        researcher.add_tag("conference-speaker")
         if conference_lead.get("presentation_type") in ("Platform Talk", "Keynote"):
-            lead.add_tag("platform-speaker")
+            researcher.add_tag("platform-speaker")
         if conference_lead.get("is_senior_role"):
-            lead.add_tag("senior-role")
+            researcher.add_tag("senior-role")
 
-        return lead
+        return researcher
 
     async def get_service_status(self) -> Dict[str, Any]:
         """Return service capability info for status endpoints."""
@@ -303,7 +303,7 @@ class ConferenceService:
 
     @staticmethod
     def _convert_to_lead_dict(speaker: Dict[str, Any], score: int) -> Dict[str, Any]:
-        """Normalise a speaker dict to the standard lead dict schema."""
+        """Normalise a speaker dict to the standard researcher dict schema."""
         return {
             "name":               speaker.get("name", "Unknown"),
             "title":              speaker.get("title", "Speaker"),

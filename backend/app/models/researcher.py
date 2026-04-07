@@ -69,12 +69,6 @@ class Researcher(Base):
         nullable=False,
         index=True,
     )
-    team_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("teams.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-    )
     assigned_to = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -155,7 +149,7 @@ class Researcher(Base):
     notes = Column(Text, nullable=True)
 
     status = Column(String(50), default="NEW", nullable=False, index=True)
-    # Status values: NEW, CONTACTED, QUALIFIED, PROPOSAL, NEGOTIATION, WON, LOST
+    # Status values: NEW, REVIEWING, NOTED, CONTACTED
 
     # Timestamps
     last_contacted_at = Column(DateTime(timezone=True), nullable=True)
@@ -171,7 +165,6 @@ class Researcher(Base):
 
     # Relationships
     user = relationship("User", back_populates="researchers")
-    team = relationship("Team", back_populates="researchers")
     assignee = relationship("User", foreign_keys=[assigned_to])
 
     # Indexes for common queries

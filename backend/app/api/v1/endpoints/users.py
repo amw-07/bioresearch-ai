@@ -337,7 +337,7 @@ async def delete_account(
 
     Deletes:
     - User account
-    - All leads
+    - All researchers
     - All searches
     - All exports
     - All pipelines

@@ -33,8 +33,8 @@ def prepare_researcher_for_serialization(researcher: Researcher) -> None:
         researcher.company,
         researcher.location,
         researcher.email,
-        researcher.propensity_score,
-        researcher.priority_tier,
+        researcher.relevance_score,
+        researcher.relevance_tier,
         researcher.status,
         researcher.created_at,
         researcher.updated_at,
@@ -223,7 +223,7 @@ async def bulk_create_researchers(
     success_count = 0
     errors = []
 
-    for idx, researcher_data in enumerate(request.leads):
+    for idx, researcher_data in enumerate(request.researchers):
         try:
             researcher = Researcher(user_id=current_user.id, **researcher_data.model_dump())
             researcher.add_data_source("bulk_import")
@@ -236,6 +236,6 @@ async def bulk_create_researchers(
     return BulkOperationResponse(
         success_count=success_count,
         failure_count=len(errors),
-        total=len(request.leads),
+        total=len(request.researchers),
         errors=errors,
     )

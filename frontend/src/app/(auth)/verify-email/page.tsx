@@ -61,7 +61,7 @@ export default function VerifyEmailPage() {
       <CardHeader>
         <div className="mb-4 flex items-center justify-center gap-2">
           <BarChart3 className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold">Lead Generator</span>
+          <span className="text-2xl font-bold">Researcher Generator</span>
         </div>
         <div className="mb-4 flex justify-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">

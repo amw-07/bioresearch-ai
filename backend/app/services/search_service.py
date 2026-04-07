@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 from app.models.search import Search
 from app.models.user import User
 from app.services.data_source_manager import (DataSourceType,
@@ -40,7 +40,7 @@ class SearchService:
         max_results: int = 50,
     ) -> Dict:
         """
-        Execute a search and optionally create leads
+        Execute a search and optionally create researchers
 
         Args:
             query: Search query
@@ -50,7 +50,7 @@ class SearchService:
             filters: Additional filters
             save_search: Whether to save this search
             saved_name: Name for saved search
-            create_leads: Whether to create lead records
+            create_leads: Whether to create researcher records
             max_results: Maximum results to return
 
         Returns:
@@ -97,32 +97,32 @@ class SearchService:
             search_results, deduplicate=True
         )
 
-        # Create leads if requested
+        # Create researchers if requested
         created_leads = []
-        lead_ids = []
+        researcher_ids = []
 
         if create_leads and aggregated:
-            # Normalize the user ID before attaching it to generated leads.
+            # Normalize the user ID before attaching it to generated researchers.
             user_id_str = str(user.id)
 
             for lead_dict in aggregated:
-                # Convert to Lead model
-                lead = self._dict_to_lead(lead_dict, user_id_str)
+                # Convert to Researcher model
+                researcher = self._dict_to_lead(lead_dict, user_id_str)
 
                 # Calculate score using the Phase 2.5 scoring service.
-                lead.propensity_score = self._calculate_default_score(lead)
-                lead.update_priority_tier()
+                researcher.relevance_score = self._calculate_default_score(researcher)
+                researcher.update_relevance_tier()
 
                 # Save to database
-                db.add(lead)
-                created_leads.append(lead)
+                db.add(researcher)
+                created_leads.append(researcher)
 
             await db.commit()
 
             # Refresh to get IDs
-            for lead in created_leads:
-                await db.refresh(lead)
-                lead_ids.append(str(lead.id))
+            for researcher in created_leads:
+                await db.refresh(researcher)
+                researcher_ids.append(str(researcher.id))
 
             # Update ranks
             await self._update_lead_ranks(user_id_str, db)
@@ -137,7 +137,7 @@ class SearchService:
             search_type=search_type,
             filters=filters or {},
             results_count=len(aggregated),
-            results_snapshot=lead_ids,
+            results_snapshot=researcher_ids,
             is_saved=save_search,
             saved_name=saved_name,
             execution_time_ms=execution_time,
@@ -162,32 +162,32 @@ class SearchService:
             "leads_created": len(created_leads),
             "execution_time_ms": execution_time,
             "results": aggregated if not create_leads else [],
-            "lead_ids": lead_ids if create_leads else [],
+            "researcher_ids": researcher_ids if create_leads else [],
             "is_saved": save_search,
             "saved_name": saved_name,
         }
 
-    def _calculate_default_score(self, lead: Lead) -> int:
-        """Calculate lead propensity score using the Phase 2.5 ScoringService."""
+    def _calculate_default_score(self, researcher: Researcher) -> int:
+        """Calculate researcher relevance score using the Phase 2.5 ScoringService."""
         try:
             from app.services.scoring_service import get_scoring_service
 
-            score, _ = get_scoring_service().score_lead_sync(lead)
+            score, _ = get_scoring_service().score_lead_sync(researcher)
             return score
         except Exception as exc:
             logger.warning("ScoringService failed, using baseline: %s", exc)
             base = 50
-            if lead.email:
+            if researcher.email:
                 base += 8
-            if lead.linkedin_url:
+            if researcher.linkedin_url:
                 base += 5
-            if lead.recent_publication:
+            if researcher.recent_publication:
                 base += 10
-            if lead.company_funding:
+            if researcher.company_funding:
                 base += 5
-            if lead.publication_count and lead.publication_count > 0:
-                base += min(lead.publication_count * 2, 12)
-            nih = (lead.enrichment_data or {}).get("nih_grants", {})
+            if researcher.publication_count and researcher.publication_count > 0:
+                base += min(researcher.publication_count * 2, 12)
+            nih = (researcher.enrichment_data or {}).get("nih_grants", {})
             if nih.get("active_grants", 0) > 0:
                 base += 10
             return min(base, 100)
@@ -279,7 +279,7 @@ class SearchService:
             search_id: Previous search ID
             user: User
             db: Database session
-            create_leads: Whether to create new leads
+            create_leads: Whether to create new researchers
 
         Returns:
             New search results
@@ -310,16 +310,16 @@ class SearchService:
             create_leads=create_leads,
         )
 
-    def _dict_to_lead(self, lead_dict: Dict, user_id: str) -> Lead:
+    def _dict_to_lead(self, lead_dict: Dict, user_id: str) -> Researcher:
         """
-        Convert dictionary to Lead model
+        Convert dictionary to Researcher model
 
         Args:
-            lead_dict: Lead data dictionary
+            lead_dict: Researcher data dictionary
             user_id: User ID as string
 
         Returns:
-            Lead model instance
+            Researcher model instance
         """
         # Determine primary data source
         sources = lead_dict.get("data_sources", ["unknown"])
@@ -327,20 +327,20 @@ class SearchService:
 
         # Convert based on source
         if primary_source == "pubmed":
-            lead = self.data_source_manager.pubmed_service.convert_to_lead_model(
+            researcher = self.data_source_manager.pubmed_service.convert_to_researcher_model(
                 lead_dict, user_id
             )
         elif primary_source == "conference":
-            lead = self.data_source_manager.conference_service.convert_to_lead_model(
+            researcher = self.data_source_manager.conference_service.convert_to_researcher_model(
                 lead_dict, user_id
             )
         elif primary_source == "funding":
-            lead = self.data_source_manager.funding_service.convert_to_lead_model(
+            researcher = self.data_source_manager.funding_service.convert_to_researcher_model(
                 lead_dict, user_id
             )
         else:
             # Generic fallback
-            lead = Lead(
+            researcher = Researcher(
                 user_id=user_id,
                 name=lead_dict.get("name", "Unknown"),
                 title=lead_dict.get("title"),
@@ -352,22 +352,22 @@ class SearchService:
             )
 
             for source in sources:
-                lead.add_data_source(source)
+                researcher.add_data_source(source)
 
-        return lead
+        return researcher
 
     async def _update_lead_ranks(self, user_id: str, db: AsyncSession):
-        """Update lead ranks based on scores"""
+        """Update researcher ranks based on scores"""
         from uuid import UUID
 
         result = await db.execute(
-            select(Lead)
-            .where(Lead.user_id == UUID(user_id))
-            .order_by(Lead.propensity_score.desc())
+            select(Researcher)
+            .where(Researcher.user_id == UUID(user_id))
+            .order_by(Researcher.relevance_score.desc())
         )
 
-        for rank, lead in enumerate(result.scalars().all(), start=1):
-            lead.rank = rank
+        for rank, researcher in enumerate(result.scalars().all(), start=1):
+            researcher.rank = rank
 
         await db.commit()
 

@@ -1,7 +1,7 @@
 """Research intelligence schema — rename leads table and add AI columns.
 
 Revision ID: 0010
-Revises: 0009
+Revises: 0005
 Create Date: 2026-04-07
 """
 
@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import inspect
 
 revision = "0010"
-down_revision = "0009"
+down_revision = "0005"
 branch_labels = None
 depends_on = None
 

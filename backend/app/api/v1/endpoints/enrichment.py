@@ -1,6 +1,6 @@
 """
 Enrichment API Endpoints
-Enrich lead data with external APIs
+Enrich researcher data with external APIs
 """
 
 from typing import List, Optional
@@ -12,7 +12,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_active_user, get_db
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher as Researcher
 from app.models.usage import UsageEventType
 from app.models.user import User
 from app.schemas.base import BulkOperationResponse, MessageResponse
@@ -30,7 +30,7 @@ router = APIRouter()
 
 
 class EnrichLeadRequest(BaseModel):
-    """Request to enrich a lead"""
+    """Request to enrich a researcher"""
 
     services: Optional[List[str]] = Field(
         None,
@@ -43,7 +43,7 @@ class EnrichLeadRequest(BaseModel):
 
 
 class EnrichBatchRequest(BaseModel):
-    """Request to enrich multiple leads"""
+    """Request to enrich multiple researchers"""
 
     lead_ids: List[UUID] = Field(..., min_length=1, max_length=100)
     services: Optional[List[str]] = None
@@ -67,10 +67,10 @@ class EnrichBatchRequest(BaseModel):
 
 
 @router.post(
-    "/leads/batch",  # This must come BEFORE /leads/{lead_id}
+    "/researchers/batch",  # This must come BEFORE /researchers/{lead_id}
     response_model=BulkOperationResponse,
-    summary="Enrich multiple leads",
-    description="Enrich multiple leads in batch",
+    summary="Enrich multiple researchers",
+    description="Enrich multiple researchers in batch",
 )
 async def enrich_leads_batch(
     request: EnrichBatchRequest,
@@ -79,26 +79,26 @@ async def enrich_leads_batch(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Enrich multiple leads
+    Enrich multiple researchers
 
     **Process:**
-    - Processes up to 100 leads at once
+    - Processes up to 100 researchers at once
     - Runs in background to avoid timeout
     - Uses caching to optimize API costs
-    - Updates leads as enrichment completes
+    - Updates researchers as enrichment completes
 
     **Best practices:**
-    - Start with small batches (10-20 leads)
+    - Start with small batches (10-20 researchers)
     - Check costs if using paid APIs
-    - Monitor results in lead details
+    - Monitor results in researcher details
     """
     service = get_enrichment_service()
 
-    # Validate lead limit
+    # Validate researcher limit
     if len(request.lead_ids) > 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 100 leads per batch",
+            detail="Maximum 100 researchers per batch",
         )
 
     try:
@@ -147,10 +147,10 @@ async def enrich_leads_batch(
 
 
 @router.post(
-    "/leads/{lead_id}",
+    "/researchers/{lead_id}",
     response_model=dict,
-    summary="Enrich lead",
-    description="Enrich a single lead with external data",
+    summary="Enrich researcher",
+    description="Enrich a single researcher with external data",
 )
 async def enrich_lead(
     lead_id: UUID,
@@ -160,7 +160,7 @@ async def enrich_lead(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Enrich a single lead
+    Enrich a single researcher
 
     **Available services:**
     - `email`: Find email address (Hunter.io)
@@ -168,10 +168,10 @@ async def enrich_lead(
     - `linkedin`: LinkedIn profile (free: Google CSE → DuckDuckGo → pattern)
 
     **Process:**
-    1. Validates lead exists and belongs to user
+    1. Validates researcher exists and belongs to user
     2. Checks which fields need enrichment
     3. Calls external APIs concurrently
-    4. Updates lead with new data
+    4. Updates researcher with new data
     5. Caches results to reduce API costs
 
     **Returns:**
@@ -184,21 +184,21 @@ async def enrich_lead(
 
     service = get_enrichment_service()
 
-    # Get lead
+    # Get researcher
     result = await db.execute(
-        select(Lead).where(and_(Lead.id == lead_id, Lead.user_id == current_user.id))
+        select(Researcher).where(and_(Researcher.id == lead_id, Researcher.user_id == current_user.id))
     )
-    lead = result.scalar_one_or_none()
+    researcher = result.scalar_one_or_none()
 
-    if not lead:
+    if not researcher:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Researcher not found"
         )
 
     try:
-        # Enrich lead
+        # Enrich researcher
         enrichment_result = await service.enrich_lead(
-            lead=lead, db=db, services=request.services
+            researcher=researcher, db=db, services=request.services
         )
 
         enriched_count = len(enrichment_result["enrichments"])
@@ -209,7 +209,7 @@ async def enrich_lead(
                 event_type=UsageEventType.LEAD_ENRICHED,
                 quantity=enriched_count,
                 metadata={
-                    "lead_id": str(lead.id),
+                    "lead_id": str(researcher.id),
                     "services": list(enrichment_result["enrichments"].keys()),
                 },
             )
@@ -221,8 +221,8 @@ async def enrich_lead(
         tags_applied = pubmed_data.get("tags_applied", [])
 
         return {
-            "lead_id": str(lead.id),
-            "lead_name": lead.name,
+            "lead_id": str(researcher.id),
+            "lead_name": researcher.name,
             "enrichments": enrichment_result["enrichments"],
             "errors": enrichment_result["errors"],
             "success": len(enrichment_result["enrichments"]) > 0,
@@ -247,10 +247,10 @@ async def enrich_lead(
 
 
 @router.get(
-    "/leads/{lead_id}/status",
+    "/researchers/{lead_id}/status",
     response_model=dict,
     summary="Get enrichment status",
-    description="Check which fields are enriched for a lead",
+    description="Check which fields are enriched for a researcher",
 )
 async def get_enrichment_status(
     lead_id: UUID,
@@ -269,18 +269,18 @@ async def get_enrichment_status(
     """
     service = get_enrichment_service()
 
-    # Get lead
+    # Get researcher
     result = await db.execute(
-        select(Lead).where(and_(Lead.id == lead_id, Lead.user_id == current_user.id))
+        select(Researcher).where(and_(Researcher.id == lead_id, Researcher.user_id == current_user.id))
     )
-    lead = result.scalar_one_or_none()
+    researcher = result.scalar_one_or_none()
 
-    if not lead:
+    if not researcher:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Researcher not found"
         )
 
-    status = await service.get_enrichment_status(lead)
+    status = await service.get_enrichment_status(researcher)
 
     return status
 
@@ -333,7 +333,7 @@ async def get_available_services():
             "name": "Company Enricher",
             "description": "Three-layer company enrichment: NIH data → Clearbit API → structural fallback",
             "layers": {
-                "nih_data": "free — from NIH grant record (academic leads)",
+                "nih_data": "free — from NIH grant record (academic researchers)",
                 "clearbit": f"free {clearbit_status['remaining']}/{clearbit_status['limit']} remaining this month (score ≥ 50, pharma/unknown only)",
                 "structural_mock": "always available fallback",
             },
@@ -377,8 +377,8 @@ async def get_quota_status(
     Get current month's API quota usage.
 
     Shows:
-    - Hunter.io: used/remaining (25/month, score ≥ 70 leads only)
-    - Clearbit: used/remaining (50/month, pharma leads score ≥ 50 only)
+    - Hunter.io: used/remaining (25/month, score ≥ 70 researchers only)
+    - Clearbit: used/remaining (50/month, pharma researchers score ≥ 50 only)
     - Reset date: first of next month
     """
     quota_manager = get_quota_manager()

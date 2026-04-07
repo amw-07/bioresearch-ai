@@ -52,8 +52,8 @@ async def create_export(
         - `json`: JSON array of objects
     
     **Filters:**
-    - `min_score`: Minimum propensity score
-    - `max_score`: Maximum propensity score
+    - `min_score`: Minimum relevance score
+    - `max_score`: Maximum relevance score
     - `priority_tier`: HIGH, MEDIUM, LOW
     - `status`: Researcher status
     - `location`: Location filter

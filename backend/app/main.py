@@ -1,6 +1,6 @@
 """
 FastAPI Application
-Main entry point for the Biotech Lead Generator API
+BioResearch AI — Main API entry point
 """
 
 import logging
@@ -37,7 +37,9 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan events — startup and shutdown."""
     logger.info("Starting BioResearch AI...")
-    logger.info(f"Environment: {getattr(settings, 'SENTRY_ENVIRONMENT', 'local')}")
+    logger.info(
+        "Environment: production" if not settings.DEBUG else "Environment: development"
+    )
     logger.info(f"Debug mode: {settings.DEBUG}")
 
     try:

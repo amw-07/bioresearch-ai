@@ -94,7 +94,7 @@ class MessageResponse(BaseModel):
     message: str
 
     model_config = ConfigDict(
-        json_schema_extra={"example": {"message": "Lead deleted successfully"}}
+        json_schema_extra={"example": {"message": "Researcher deleted successfully"}}
     )
 
 
@@ -173,7 +173,7 @@ class SortParams(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "example": {"sort_by": "propensity_score", "sort_order": "desc"}
+            "example": {"sort_by": "relevance_score", "sort_order": "desc"}
         }
     )
 

@@ -8,13 +8,13 @@ Bridges the gap between:
 
 Fixes the broken call chain documented in the Phase 2.3 Step 1 audit:
 
-  POST /api/v1/enrich/{lead_id}?services=pubmed
+  POST /api/v1/enrich/{researcher_id}?services=pubmed
      → EnrichmentService._enrich_pubmed()         [NEW in Fix 4]
      → PubMedEnrichmentService.enrich_lead_pubmed()  [THIS FILE]
      → PubMedService.get_author_profile()          [EXISTS — Phase 2.3 Step 1]
 
 Additional data quality features implemented here:
-  - score_boost  — integer points added to propensity_score based on citations/h-index
+  - score_boost  — integer points added to relevance_score based on citations/h-index
   - highly-cited — tag applied when total_citations >= 100
 """
 
@@ -25,7 +25,7 @@ from typing import Any, Dict, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.researcher import Researcher as Lead
+from app.models.researcher import Researcher
 from app.services.pubmed_service import PubMedService, get_pubmed_service
 
 logger = logging.getLogger(__name__)
@@ -36,20 +36,20 @@ _MAX_SCORE_BOOST = 25
 
 
 class PubMedEnrichmentService:
-    """Enriches a Lead using PubMed citation data."""
+    """Enriches a Researcher using PubMed citation data."""
 
     def __init__(self, pubmed_service: Optional[PubMedService] = None) -> None:
         self._pubmed = pubmed_service or get_pubmed_service()
 
     async def enrich_lead_pubmed(
         self,
-        lead: Lead,
+        researcher: Researcher,
         db: AsyncSession,
         max_publications: int = 20,
         years_back: int = 5,
     ) -> Dict[str, Any]:
-        """Fetch a citation profile for the lead's author and apply enrichment."""
-        if not lead.name or lead.name == "Unknown":
+        """Fetch a citation profile for the researcher's author and apply enrichment."""
+        if not researcher.name or researcher.name == "Unknown":
             return {
                 "status": "error",
                 "reason": "lead_has_no_name",
@@ -59,15 +59,15 @@ class PubMedEnrichmentService:
 
         try:
             profile = await self._pubmed.get_author_profile(
-                author_name=lead.name,
+                author_name=researcher.name,
                 max_publications=max_publications,
                 years_back=years_back,
             )
         except Exception as exc:
             logger.error(
-                "get_author_profile() raised for lead %s (%s): %s",
-                lead.id,
-                lead.name,
+                "get_author_profile() raised for researcher %s (%s): %s",
+                researcher.id,
+                researcher.name,
                 exc,
                 exc_info=True,
             )
@@ -91,27 +91,27 @@ class PubMedEnrichmentService:
 
         total_citations = profile.get("total_citations", 0)
         if total_citations >= _HIGHLY_CITED_THRESHOLD:
-            lead.add_tag("highly-cited")
+            researcher.add_tag("highly-cited")
             tags_applied.append("highly-cited")
             logger.debug(
-                "Tag 'highly-cited' applied to lead %s (citations=%d)",
-                lead.id,
+                "Tag 'highly-cited' applied to researcher %s (citations=%d)",
+                researcher.id,
                 total_citations,
             )
 
         institution_type = profile.get("institution_type", "unknown")
         if institution_type != "unknown":
             tag = f"institution:{institution_type}"
-            lead.add_tag(tag)
+            researcher.add_tag(tag)
             tags_applied.append(tag)
 
         pub_count = profile.get("publication_count", 0)
         if pub_count > 0:
-            lead.publication_count = pub_count
+            researcher.publication_count = pub_count
 
-        if score_boost > 0 and lead.propensity_score is not None:
-            lead.propensity_score = min(100, lead.propensity_score + score_boost)
-            lead.update_priority_tier()
+        if score_boost > 0 and researcher.relevance_score is not None:
+            researcher.relevance_score = min(100, researcher.relevance_score + score_boost)
+            researcher.update_relevance_tier()
 
         enrichment_payload = {
             "publication_count": pub_count,
@@ -126,14 +126,14 @@ class PubMedEnrichmentService:
             "tags_applied": tags_applied,
             "cached_at": profile.get("cached_at"),
         }
-        lead.set_enrichment("pubmed", enrichment_payload)
+        researcher.set_enrichment("pubmed", enrichment_payload)
         await db.commit()
-        await db.refresh(lead)
+        await db.refresh(researcher)
 
         logger.info(
-            "PubMed enrichment complete for lead %s (%s): pubs=%d, cit=%d, h=%d, boost=%d, tags=%s",
-            lead.id,
-            lead.name,
+            "PubMed enrichment complete for researcher %s (%s): pubs=%d, cit=%d, h=%d, boost=%d, tags=%s",
+            researcher.id,
+            researcher.name,
             pub_count,
             total_citations,
             profile.get("h_index_approx", 0),

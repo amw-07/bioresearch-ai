@@ -102,11 +102,11 @@ class CacheKey:
 
     @staticmethod
     def lead_search(query_hash: str) -> str:
-        return f"search:leads:{query_hash}"
+        return f"search:researchers:{query_hash}"
 
     @staticmethod
     def lead_data(lead_id: str) -> str:
-        return f"lead:data:{lead_id}"
+        return f"researcher:data:{lead_id}"
 
     @staticmethod
     def enrichment(lead_id: str, enrichment_type: str) -> str:
@@ -153,7 +153,7 @@ class CacheKey:
         """
         Cache key for a LinkedIn profile lookup result.
         TTL: 7 days — preserves Google CSE daily quota.
-        Use LinkedInService._build_cache_key(lead) to generate the hash.
+        Use LinkedInService._build_cache_key(researcher) to generate the hash.
         """
         return f"linkedin:profile:{lead_id_and_name_hash}"
 
@@ -189,7 +189,7 @@ class CacheKey:
         """
         Cache key for an email finder result.
         TTL: 30 days — email addresses are stable.
-        Use EmailFinder._email_cache_key(lead) to build the hash.
+        Use EmailFinder._email_cache_key(researcher) to build the hash.
         """
         return f"email:finder:{lead_id_name_hash}"
 
@@ -198,7 +198,7 @@ class CacheKey:
         """
         Cache key for a Hunter.io domain search result.
         TTL: 7 days — domain emails list is fairly stable.
-        Shared across all leads at the same company domain.
+        Shared across all researchers at the same company domain.
         """
         return f"hunter:domain:{domain_hash}"
 
@@ -207,7 +207,7 @@ class CacheKey:
         """
         Cache key for a Clearbit company lookup.
         TTL: 30 days — company data is stable.
-        Shared across all leads from the same company.
+        Shared across all researchers from the same company.
         """
         return f"clearbit:company:{domain_hash}"
 

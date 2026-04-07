@@ -61,9 +61,9 @@ async def execute_search(
     **Returns:**
     - `search_id`: ID of search record
     - `results_count`: Number of results found
-    - `researchers_created`: Number of leads created
+    - `researchers_created`: Number of researchers created
     - `execution_time_ms`: Time taken in milliseconds
-    - `lead_ids`: IDs of created leads (if create_leads=true)
+    - `lead_ids`: IDs of created researchers (if create_leads=true)
     """
     await search_limiter.check(request)
 
@@ -94,7 +94,7 @@ async def execute_search(
 
         return {
             **results,
-            "message": f"Search completed. Found {results['results_count']} results, created {results['researchers_created']} leads.",
+            "message": f"Search completed. Found {results['results_count']} results, created {results['researchers_created']} researchers.",
         }
 
     except ValueError as e:
@@ -174,7 +174,7 @@ async def get_search(
     Returns complete information about a search including:
     - Query and filters
     - Results count
-    - Created leads
+    - Created researchers
     - Execution time
     """
     from sqlalchemy import and_
@@ -248,7 +248,7 @@ async def save_search(
 )
 async def rerun_search(
     search_id: UUID,
-    create_leads: bool = Query(True, description="Create new leads"),
+    create_leads: bool = Query(True, description="Create new researchers"),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -257,7 +257,7 @@ async def rerun_search(
 
     Useful for:
     - Finding new publications
-    - Refreshing lead data
+    - Refreshing researcher data
     - Periodic searches (before pipelines)
 
     Creates a new search record with fresh results.
@@ -310,7 +310,7 @@ async def delete_search(
     """
     Delete a search from history
 
-    Note: This does NOT delete the leads created by the search,
+    Note: This does NOT delete the researchers created by the search,
     only the search record itself.
     """
     from sqlalchemy import and_
@@ -371,19 +371,19 @@ async def get_data_source_status():
     "/status/quality",
     response_model=dict,
     summary="Get data quality metrics",
-    description="Returns quality statistics for leads in the database",
+    description="Returns quality statistics for researchers in the database",
 )
 async def get_data_quality_metrics(
     limit: int = Query(
         500,
         ge=10,
         le=2000,
-        description="Max leads to sample for quality check",
+        description="Max researchers to sample for quality check",
     ),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get quality health metrics for the current user's leads."""
+    """Get quality health metrics for the current user's researchers."""
     from app.models.researcher import Researcher
 
     result = await db.execute(
@@ -398,7 +398,7 @@ async def get_data_quality_metrics(
         return {
             "status": "no_leads",
             "total_sampled": 0,
-            "message": "No leads found. Run a search first.",
+            "message": "No researchers found. Run a search first.",
         }
 
     quality_svc = get_data_quality_service()

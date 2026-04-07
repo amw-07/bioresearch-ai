@@ -1,5 +1,5 @@
-export const APP_NAME = 'Biotech Lead Generator'
-export const APP_DESCRIPTION = 'AI-powered lead generation for biotech companies'
+export const APP_NAME = 'BioResearch AI'
+export const APP_DESCRIPTION = 'AI-powered biotech research intelligence'
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
@@ -8,17 +8,10 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
-  LEADS: '/dashboard/researchers',
+  RESEARCHERS: '/dashboard/researchers',
   SEARCH: '/dashboard/search',
-  PIPELINES: '/dashboard/pipelines',
-  ANALYTICS: '/dashboard/analytics',
-  ALERTS: '/dashboard/alerts',
-  REPORTS: '/dashboard/reports',
-  CRM: '/dashboard/crm',
-  COLLABORATION: '/dashboard/collaboration',
   SCORING: '/dashboard/scoring',
   EXPORTS: '/dashboard/exports',
-  TEAMS: '/dashboard/teams',
   SETTINGS: '/settings',
 } as const
 
@@ -29,7 +22,7 @@ export const SUBSCRIPTION_TIERS = {
   ENTERPRISE: 'enterprise',
 } as const
 
-export const LEAD_STATUSES = {
+export const RESEARCHER_STATUSES = {
   NEW: 'NEW',
   CONTACTED: 'CONTACTED',
   QUALIFIED: 'QUALIFIED',
