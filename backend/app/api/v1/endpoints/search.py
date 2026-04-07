@@ -396,7 +396,7 @@ async def get_data_quality_metrics(
 
     if not researchers:
         return {
-            "status": "no_leads",
+            "status": "no_researchers",
             "total_sampled": 0,
             "message": "No researchers found. Run a search first.",
         }
@@ -409,7 +409,7 @@ async def get_data_quality_metrics(
     completeness_sum = 0.0
 
     for researcher in researchers:
-        qr = quality_svc.check_existing_lead(researcher)
+        qr = quality_svc.check_existing_researcher(researcher)
         completeness_sum += qr.completeness
 
         if qr.passes:

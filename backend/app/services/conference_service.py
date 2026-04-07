@@ -47,8 +47,8 @@ class ConferenceService:
     Manages conference speaker data for researcher generation.
 
     Two modes:
-      1. search_leads(query)          - query-filtered, used by search endpoint
-      2. get_all_speakers(conf, year) - full unfiltered scrape, used by pipelines
+      1. search_researchers(query)          - query-filtered, used by search endpoint
+      2. get_all_speakers(conf, year) - full unfiltered scrape, used by datas
     """
 
     def __init__(self) -> None:
@@ -63,7 +63,7 @@ class ConferenceService:
     # PUBLIC - Search entry point (called by DataSourceManager)
     # =========================================================================
 
-    async def search_leads(
+    async def search_researchers(
         self,
         query: str,
         conferences: Optional[List[str]] = None,
@@ -110,7 +110,7 @@ class ConferenceService:
         scored.sort(key=lambda x: x[0], reverse=True)
 
         researchers = [
-            self._convert_to_lead_dict(sp, score)
+            self._convert_to_researcher_dict(sp, score)
             for score, sp in scored[:max_results]
         ]
 
@@ -127,7 +127,7 @@ class ConferenceService:
     ) -> List[Dict[str, Any]]:
         """
         Return all scraped speakers for a single conference.
-        Used by the annual pipeline refresh task.
+        Used by the annual data refresh task.
         """
         year = year or datetime.now().year
         return await self._get_speakers(conference_key, year)
@@ -138,22 +138,22 @@ class ConferenceService:
 
     def convert_to_researcher_model(
         self,
-        conference_lead: Dict[str, Any],
+        conference_researcher: Dict[str, Any],
         user_id: str,
     ) -> Researcher:
         """
         Convert a conference researcher dict to a Researcher ORM instance.
-        Called by DataSourceManager.search_and_convert_to_leads()
-        and SearchService._dict_to_lead().
+        Called by DataSourceManager.search_and_convert_to_researchers()
+        and SearchService._dict_to_researcher().
         """
         researcher = Researcher(
             user_id=user_id,
-            name=conference_lead.get("name", "Unknown"),
-            title=conference_lead.get("title", "Speaker"),
-            company=conference_lead.get("company", "Unknown"),
-            location=conference_lead.get("location", "Unknown"),
-            email=conference_lead.get("email") or None,
-            linkedin_url=conference_lead.get("linkedin") or None,
+            name=conference_researcher.get("name", "Unknown"),
+            title=conference_researcher.get("title", "Speaker"),
+            company=conference_researcher.get("company", "Unknown"),
+            location=conference_researcher.get("location", "Unknown"),
+            email=conference_researcher.get("email") or None,
+            linkedin_url=conference_researcher.get("linkedin") or None,
             recent_publication=False,
             status="NEW",
         )
@@ -161,21 +161,21 @@ class ConferenceService:
         researcher.add_data_source("conference")
 
         researcher.set_enrichment("conference", {
-            "conference_name":    conference_lead.get("conference_name", ""),
-            "conference_key":     conference_lead.get("conference_key", ""),
-            "conference_year":    conference_lead.get("conference_year"),
-            "presentation_title": conference_lead.get("presentation_title", ""),
-            "presentation_type":  conference_lead.get("presentation_type", ""),
-            "session_name":       conference_lead.get("session_name", ""),
-            "relevance_score":    conference_lead.get("relevance_score", 0),
-            "institution_type":   conference_lead.get("institution_type", "unknown"),
+            "conference_name":    conference_researcher.get("conference_name", ""),
+            "conference_key":     conference_researcher.get("conference_key", ""),
+            "conference_year":    conference_researcher.get("conference_year"),
+            "presentation_title": conference_researcher.get("presentation_title", ""),
+            "presentation_type":  conference_researcher.get("presentation_type", ""),
+            "session_name":       conference_researcher.get("session_name", ""),
+            "relevance_score":    conference_researcher.get("relevance_score", 0),
+            "institution_type":   conference_researcher.get("institution_type", "unknown"),
             "scraped_at":         datetime.utcnow().isoformat(),
         })
 
         researcher.add_tag("conference-speaker")
-        if conference_lead.get("presentation_type") in ("Platform Talk", "Keynote"):
+        if conference_researcher.get("presentation_type") in ("Platform Talk", "Keynote"):
             researcher.add_tag("platform-speaker")
-        if conference_lead.get("is_senior_role"):
+        if conference_researcher.get("is_senior_role"):
             researcher.add_tag("senior-role")
 
         return researcher
@@ -302,7 +302,7 @@ class ConferenceService:
         return score
 
     @staticmethod
-    def _convert_to_lead_dict(speaker: Dict[str, Any], score: int) -> Dict[str, Any]:
+    def _convert_to_researcher_dict(speaker: Dict[str, Any], score: int) -> Dict[str, Any]:
         """Normalise a speaker dict to the standard researcher dict schema."""
         return {
             "name":               speaker.get("name", "Unknown"),

@@ -118,7 +118,7 @@ class PubMedService:
     Production-ready PubMed service.
 
     Provides two modes:
-      1. Researcher discovery  — search_leads() / search_multiple_queries()
+      1. Researcher discovery  — search_researchers() / search_multiple_queries()
       2. Researcher enrichment — get_author_profile() [NEW in Phase 2.3]
     """
 
@@ -150,7 +150,7 @@ class PubMedService:
             self._scraper = None
             logger.warning("PubMedScraper not available — check Biopython install")
 
-    async def search_leads(
+    async def search_researchers(
         self,
         query: str,
         max_results: int = 0,
@@ -213,11 +213,11 @@ class PubMedService:
         **filter_kwargs,
     ) -> List[Dict]:
         """Search multiple queries, deduplicate, and return combined results."""
-        all_leads: List[Dict] = []
+        all_researchers: List[Dict] = []
         seen_names: set = set()
 
         for query in queries:
-            researchers = await self.search_leads(
+            researchers = await self.search_researchers(
                 query=query,
                 max_results=max_results_per_query,
                 years_back=years_back,
@@ -226,10 +226,10 @@ class PubMedService:
             for researcher in researchers:
                 name = (researcher.get("name") or "").strip()
                 if name and name not in seen_names:
-                    all_leads.append(researcher)
+                    all_researchers.append(researcher)
                     seen_names.add(name)
 
-        return all_leads
+        return all_researchers
 
     async def get_author_profile(
         self,
@@ -630,31 +630,31 @@ class PubMedService:
         except (TypeError, ValueError):
             return None
 
-    def convert_to_researcher_model(self, pubmed_lead: Dict, user_id: str) -> Researcher:
+    def convert_to_researcher_model(self, pubmed_researcher: Dict, user_id: str) -> Researcher:
         """Convert a PubMed search result dict to a Researcher ORM instance."""
         researcher = Researcher(
             user_id=user_id,
-            name=pubmed_lead.get("name", "Unknown"),
-            title=pubmed_lead.get("title", "Principal Investigator"),
-            company=pubmed_lead.get("company", "Unknown"),
-            location=pubmed_lead.get("location", "Unknown"),
-            company_hq=pubmed_lead.get("company_hq", "Unknown"),
-            email=pubmed_lead.get("email") or None,
-            linkedin_url=pubmed_lead.get("linkedin") or None,
-            recent_publication=pubmed_lead.get("recent_publication", True),
-            publication_year=pubmed_lead.get("publication_year"),
-            publication_title=pubmed_lead.get("publication_title"),
+            name=pubmed_researcher.get("name", "Unknown"),
+            title=pubmed_researcher.get("title", "Principal Investigator"),
+            company=pubmed_researcher.get("company", "Unknown"),
+            location=pubmed_researcher.get("location", "Unknown"),
+            company_hq=pubmed_researcher.get("company_hq", "Unknown"),
+            email=pubmed_researcher.get("email") or None,
+            linkedin_url=pubmed_researcher.get("linkedin") or None,
+            recent_publication=pubmed_researcher.get("recent_publication", True),
+            publication_year=pubmed_researcher.get("publication_year"),
+            publication_title=pubmed_researcher.get("publication_title"),
             publication_count=1,
-            company_funding=pubmed_lead.get("company_funding", "Unknown"),
-            uses_3d_models=pubmed_lead.get("uses_3d_models", True),
+            company_funding=pubmed_researcher.get("company_funding", "Unknown"),
+            uses_3d_models=pubmed_researcher.get("uses_3d_models", True),
             status="NEW",
         )
         researcher.add_data_source("pubmed")
         researcher.set_enrichment(
             "pubmed",
             {
-                "pmid": pubmed_lead.get("pubmed_id"),
-                "journal": pubmed_lead.get("journal"),
+                "pmid": pubmed_researcher.get("pubmed_id"),
+                "journal": pubmed_researcher.get("journal"),
                 "search_date": datetime.utcnow().isoformat(),
             },
         )
@@ -669,7 +669,7 @@ class PubMedService:
             "rate_limit": f"{self._rps} req/sec",
             "cache_enabled": True,
             "features": [
-                "search_leads",
+                "search_researchers",
                 "search_multiple_queries",
                 "get_author_profile",
                 "citation_tracking",

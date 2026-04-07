@@ -27,7 +27,7 @@ def _validate_weight_overrides(overrides: Dict[str, float]) -> Dict[str, float]:
 class ScoreWeights(BaseModel):
     seniority_score: Optional[float] = Field(None, ge=0)
     title_relevance: Optional[float] = Field(None, ge=0)
-    is_decision_maker: Optional[float] = Field(None, ge=0)
+    is_senior_researcher: Optional[float] = Field(None, ge=0)
     has_recent_pub: Optional[float] = Field(None, ge=0)
     pub_count_norm: Optional[float] = Field(None, ge=0)
     h_index_norm: Optional[float] = Field(None, ge=0)
@@ -35,7 +35,7 @@ class ScoreWeights(BaseModel):
     nih_award_norm: Optional[float] = Field(None, ge=0)
     has_private_funding: Optional[float] = Field(None, ge=0)
     has_email: Optional[float] = Field(None, ge=0)
-    email_confidence: Optional[float] = Field(None, ge=0)
+    contact_confidence: Optional[float] = Field(None, ge=0)
     has_linkedin_verified: Optional[float] = Field(None, ge=0)
     is_conference_speaker: Optional[float] = Field(None, ge=0)
     institution_type_score: Optional[float] = Field(None, ge=0)
@@ -96,7 +96,7 @@ async def bulk_recalculate_scores(request: BulkRecalculateRequest, current_user:
 
 
 @router.post("/researchers/all/recalculate", response_model=dict, summary="Rescore all researchers for current user")
-async def rescore_all_leads(current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
+async def rescore_all_researchers(current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     weight_overrides = current_user.preferences.get("scoring_weights") if current_user.preferences else None
     summary = await get_scoring_service().batch_rescore(current_user.id, db, weight_overrides)
     return {"status": "complete", **summary}
@@ -139,7 +139,7 @@ async def get_scoring_stats(current_user: User = Depends(get_current_active_user
     tier_result = await db.execute(select(Researcher.relevance_tier, func.count(Researcher.id)).where(Researcher.user_id == current_user.id).group_by(Researcher.relevance_tier))
     distribution = {tier: count for tier, count in tier_result}
     return {
-        "total_leads": stats.total or 0,
+        "total_researchers": stats.total or 0,
         "average_score": round(float(stats.average), 2) if stats.average else 0,
         "min_score": stats.minimum or 0,
         "max_score": stats.maximum or 0,

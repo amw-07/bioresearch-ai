@@ -86,7 +86,7 @@ class User(Base):
     # Usage Tracking (JSON for flexibility)
     usage_stats = Column(JSONB, default=dict, nullable=False)
     # Example: {
-    #   "leads_created_this_month": 45,
+    #   "researchers_created_this_month": 45,
     #   "searches_this_month": 12,
     #   "api_calls_today": 150,
     #   "last_reset_date": "2024-01-01"
@@ -146,15 +146,15 @@ class User(Base):
         """
         Check if user has reached their monthly researcher limit
         """
-        leads_this_month = self.usage_stats.get("leads_created_this_month", 0)
-        return leads_this_month >= self.get_monthly_researcher_limit()
+        researchers_this_month = self.usage_stats.get("researchers_created_this_month", 0)
+        return researchers_this_month >= self.get_monthly_researcher_limit()
 
     def increment_usage(self, metric: str, amount: int = 1):
         """
         Increment a usage metric
 
         Args:
-            metric: The metric to increment (e.g., "leads_created_this_month")
+            metric: The metric to increment (e.g., "researchers_created_this_month")
             amount: Amount to increment by (default: 1)
         """
         if not self.usage_stats:
@@ -168,7 +168,7 @@ class User(Base):
         Reset monthly usage counters
         Call this at the start of each month
         """
-        self.usage_stats["leads_created_this_month"] = 0
+        self.usage_stats["researchers_created_this_month"] = 0
         self.usage_stats["searches_this_month"] = 0
         self.usage_stats["exports_this_month"] = 0
         self.usage_stats["last_reset_date"] = func.now()

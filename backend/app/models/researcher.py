@@ -149,7 +149,7 @@ class Researcher(Base):
     notes = Column(Text, nullable=True)
 
     status = Column(String(50), default="NEW", nullable=False, index=True)
-    # Status values: NEW, REVIEWING, NOTED, CONTACTED
+    # Status values: NEW, REVIEWING, NOTED, CONTACTED, ARCHIVED
 
     # Timestamps
     last_contacted_at = Column(DateTime(timezone=True), nullable=True)

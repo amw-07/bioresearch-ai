@@ -29,7 +29,7 @@ router = APIRouter()
 # ============================================================================
 
 
-class EnrichLeadRequest(BaseModel):
+class EnrichResearcherRequest(BaseModel):
     """Request to enrich a researcher"""
 
     services: Optional[List[str]] = Field(
@@ -45,13 +45,13 @@ class EnrichLeadRequest(BaseModel):
 class EnrichBatchRequest(BaseModel):
     """Request to enrich multiple researchers"""
 
-    lead_ids: List[UUID] = Field(..., min_length=1, max_length=100)
+    researcher_ids: List[UUID] = Field(..., min_length=1, max_length=100)
     services: Optional[List[str]] = None
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "lead_ids": [
+                "researcher_ids": [
                     "123e4567-e89b-12d3-a456-426614174000",
                     "123e4567-e89b-12d3-a456-426614174001",
                 ],
@@ -67,12 +67,12 @@ class EnrichBatchRequest(BaseModel):
 
 
 @router.post(
-    "/researchers/batch",  # This must come BEFORE /researchers/{lead_id}
+    "/researchers/batch",  # This must come BEFORE /researchers/{researcher_id}
     response_model=BulkOperationResponse,
     summary="Enrich multiple researchers",
     description="Enrich multiple researchers in batch",
 )
-async def enrich_leads_batch(
+async def enrich_researchers_batch(
     request: EnrichBatchRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
@@ -95,7 +95,7 @@ async def enrich_leads_batch(
     service = get_enrichment_service()
 
     # Validate researcher limit
-    if len(request.lead_ids) > 100:
+    if len(request.researcher_ids) > 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Maximum 100 researchers per batch",
@@ -103,15 +103,15 @@ async def enrich_leads_batch(
 
     try:
         # Execute batch enrichment
-        results = await service.enrich_leads_batch(
-            lead_ids=request.lead_ids,
+        results = await service.enrich_researchers_batch(
+            researcher_ids=request.researcher_ids,
             user=current_user,
             db=db,
             services=request.services,
         )
 
         successful_ids = [
-            row["lead_id"] for row in results["results"] if row["status"] == "success"
+            row["researcher_id"] for row in results["results"] if row["status"] == "success"
         ]
         if successful_ids:
             await UsageService.record(
@@ -119,7 +119,7 @@ async def enrich_leads_batch(
                 user_id=current_user.id,
                 event_type=UsageEventType.LEAD_ENRICHED,
                 quantity=len(successful_ids),
-                metadata={"source": "batch", "lead_count": len(successful_ids)},
+                metadata={"source": "batch", "researcher_count": len(successful_ids)},
             )
             await db.commit()
 
@@ -128,7 +128,7 @@ async def enrich_leads_batch(
             failure_count=results["failed"],
             total=results["total"],
             errors=[
-                {"id": r["lead_id"], "error": r.get("error", "Unknown error")}
+                {"id": r["researcher_id"], "error": r.get("error", "Unknown error")}
                 for r in results["results"]
                 if r["status"] != "success"
             ],
@@ -147,13 +147,13 @@ async def enrich_leads_batch(
 
 
 @router.post(
-    "/researchers/{lead_id}",
+    "/researchers/{researcher_id}",
     response_model=dict,
     summary="Enrich researcher",
     description="Enrich a single researcher with external data",
 )
 async def enrich_lead(
-    lead_id: UUID,
+    researcher_id: UUID,
     request: EnrichLeadRequest,
     http_request: Request,
     current_user: User = Depends(get_current_active_user),
@@ -186,7 +186,7 @@ async def enrich_lead(
 
     # Get researcher
     result = await db.execute(
-        select(Researcher).where(and_(Researcher.id == lead_id, Researcher.user_id == current_user.id))
+        select(Researcher).where(and_(Researcher.id == researcher_id, Researcher.user_id == current_user.id))
     )
     researcher = result.scalar_one_or_none()
 
@@ -209,7 +209,7 @@ async def enrich_lead(
                 event_type=UsageEventType.LEAD_ENRICHED,
                 quantity=enriched_count,
                 metadata={
-                    "lead_id": str(researcher.id),
+                    "researcher_id": str(researcher.id),
                     "services": list(enrichment_result["enrichments"].keys()),
                 },
             )
@@ -221,8 +221,8 @@ async def enrich_lead(
         tags_applied = pubmed_data.get("tags_applied", [])
 
         return {
-            "lead_id": str(researcher.id),
-            "lead_name": researcher.name,
+            "researcher_id": str(researcher.id),
+            "researcher_name": researcher.name,
             "enrichments": enrichment_result["enrichments"],
             "errors": enrichment_result["errors"],
             "success": len(enrichment_result["enrichments"]) > 0,
@@ -247,13 +247,13 @@ async def enrich_lead(
 
 
 @router.get(
-    "/researchers/{lead_id}/status",
+    "/researchers/{researcher_id}/status",
     response_model=dict,
     summary="Get enrichment status",
     description="Check which fields are enriched for a researcher",
 )
 async def get_enrichment_status(
-    lead_id: UUID,
+    researcher_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -271,7 +271,7 @@ async def get_enrichment_status(
 
     # Get researcher
     result = await db.execute(
-        select(Researcher).where(and_(Researcher.id == lead_id, Researcher.user_id == current_user.id))
+        select(Researcher).where(and_(Researcher.id == researcher_id, Researcher.user_id == current_user.id))
     )
     researcher = result.scalar_one_or_none()
 

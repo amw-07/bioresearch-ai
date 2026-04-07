@@ -36,7 +36,7 @@ class SearchService:
         filters: Optional[Dict] = None,
         save_search: bool = False,
         saved_name: Optional[str] = None,
-        create_leads: bool = True,
+        create_researchers: bool = True,
         max_results: int = 50,
     ) -> Dict:
         """
@@ -50,7 +50,7 @@ class SearchService:
             filters: Additional filters
             save_search: Whether to save this search
             saved_name: Name for saved search
-            create_leads: Whether to create researcher records
+            create_researchers: Whether to create researcher records
             max_results: Maximum results to return
 
         Returns:
@@ -98,16 +98,16 @@ class SearchService:
         )
 
         # Create researchers if requested
-        created_leads = []
+        created_researchers = []
         researcher_ids = []
 
-        if create_leads and aggregated:
+        if create_researchers and aggregated:
             # Normalize the user ID before attaching it to generated researchers.
             user_id_str = str(user.id)
 
-            for lead_dict in aggregated:
+            for researcher_dict in aggregated:
                 # Convert to Researcher model
-                researcher = self._dict_to_lead(lead_dict, user_id_str)
+                researcher = self._dict_to_researcher(researcher_dict, user_id_str)
 
                 # Calculate score using the Phase 2.5 scoring service.
                 researcher.relevance_score = self._calculate_default_score(researcher)
@@ -115,17 +115,17 @@ class SearchService:
 
                 # Save to database
                 db.add(researcher)
-                created_leads.append(researcher)
+                created_researchers.append(researcher)
 
             await db.commit()
 
             # Refresh to get IDs
-            for researcher in created_leads:
+            for researcher in created_researchers:
                 await db.refresh(researcher)
                 researcher_ids.append(str(researcher.id))
 
             # Update ranks
-            await self._update_lead_ranks(user_id_str, db)
+            await self._update_researcher_ranks(user_id_str, db)
 
         # Calculate execution time
         execution_time = int((time.time() - start_time) * 1000)
@@ -149,8 +149,8 @@ class SearchService:
 
         # Update user usage stats
         user.increment_usage("searches_this_month")
-        if created_leads:
-            user.increment_usage("leads_created_this_month", len(created_leads))
+        if created_researchers:
+            user.increment_usage("researchers_created_this_month", len(created_researchers))
         await db.commit()
 
         # Return results
@@ -159,10 +159,10 @@ class SearchService:
             "query": query,
             "search_type": search_type,
             "results_count": len(aggregated),
-            "leads_created": len(created_leads),
+            "researchers_created": len(created_researchers),
             "execution_time_ms": execution_time,
-            "results": aggregated if not create_leads else [],
-            "researcher_ids": researcher_ids if create_leads else [],
+            "results": aggregated if not create_researchers else [],
+            "researcher_ids": researcher_ids if create_researchers else [],
             "is_saved": save_search,
             "saved_name": saved_name,
         }
@@ -270,7 +270,7 @@ class SearchService:
         return search
 
     async def rerun_search(
-        self, search_id: str, user: User, db: AsyncSession, create_leads: bool = True
+        self, search_id: str, user: User, db: AsyncSession, create_researchers: bool = True
     ) -> Dict:
         """
         Re-run a previous search
@@ -279,7 +279,7 @@ class SearchService:
             search_id: Previous search ID
             user: User
             db: Database session
-            create_leads: Whether to create new researchers
+            create_researchers: Whether to create new researchers
 
         Returns:
             New search results
@@ -307,47 +307,47 @@ class SearchService:
             db=db,
             filters=original_search.filters,
             save_search=False,
-            create_leads=create_leads,
+            create_researchers=create_researchers,
         )
 
-    def _dict_to_lead(self, lead_dict: Dict, user_id: str) -> Researcher:
+    def _dict_to_researcher(self, researcher_dict: Dict, user_id: str) -> Researcher:
         """
         Convert dictionary to Researcher model
 
         Args:
-            lead_dict: Researcher data dictionary
+            researcher_dict: Researcher data dictionary
             user_id: User ID as string
 
         Returns:
             Researcher model instance
         """
         # Determine primary data source
-        sources = lead_dict.get("data_sources", ["unknown"])
+        sources = researcher_dict.get("data_sources", ["unknown"])
         primary_source = sources[0] if sources else "unknown"
 
         # Convert based on source
         if primary_source == "pubmed":
             researcher = self.data_source_manager.pubmed_service.convert_to_researcher_model(
-                lead_dict, user_id
+                researcher_dict, user_id
             )
         elif primary_source == "conference":
             researcher = self.data_source_manager.conference_service.convert_to_researcher_model(
-                lead_dict, user_id
+                researcher_dict, user_id
             )
         elif primary_source == "funding":
             researcher = self.data_source_manager.funding_service.convert_to_researcher_model(
-                lead_dict, user_id
+                researcher_dict, user_id
             )
         else:
             # Generic fallback
             researcher = Researcher(
                 user_id=user_id,
-                name=lead_dict.get("name", "Unknown"),
-                title=lead_dict.get("title"),
-                company=lead_dict.get("company"),
-                location=lead_dict.get("location"),
-                email=lead_dict.get("email"),
-                recent_publication=lead_dict.get("recent_publication", False),
+                name=researcher_dict.get("name", "Unknown"),
+                title=researcher_dict.get("title"),
+                company=researcher_dict.get("company"),
+                location=researcher_dict.get("location"),
+                email=researcher_dict.get("email"),
+                recent_publication=researcher_dict.get("recent_publication", False),
                 status="NEW",
             )
 
@@ -356,7 +356,7 @@ class SearchService:
 
         return researcher
 
-    async def _update_lead_ranks(self, user_id: str, db: AsyncSession):
+    async def _update_researcher_ranks(self, user_id: str, db: AsyncSession):
         """Update researcher ranks based on scores"""
         from uuid import UUID
 

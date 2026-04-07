@@ -112,7 +112,7 @@ class DataSourceManager:
         return results
 
     async def aggregate_results(self, search_results: Dict[str, Dict], deduplicate: bool = True) -> List[Dict]:
-        all_leads: List[Dict] = []
+        all_researchers: List[Dict] = []
         seen_names: Set[str] = set()
 
         for source, source_data in search_results.items():
@@ -121,11 +121,11 @@ class DataSourceManager:
                 if deduplicate and name in seen_names:
                     continue
                 researcher.setdefault("data_sources", []).append(source)
-                all_leads.append(researcher)
+                all_researchers.append(researcher)
                 seen_names.add(name)
-        return all_leads
+        return all_researchers
 
-    async def search_and_convert_to_leads(
+    async def search_and_convert_to_researchers(
         self,
         query: str,
         sources: List[DataSourceType],
@@ -142,14 +142,14 @@ class DataSourceManager:
         aggregated = await self.aggregate_results(search_results, deduplicate=True)
 
         researchers = []
-        for lead_dict in aggregated:
-            sources_used = lead_dict.get("data_sources", [])
+        for researcher_dict in aggregated:
+            sources_used = researcher_dict.get("data_sources", [])
             if "pubmed" in sources_used:
-                researchers.append(self.pubmed_service.convert_to_researcher_model(lead_dict, user_id))
+                researchers.append(self.pubmed_service.convert_to_researcher_model(researcher_dict, user_id))
             elif "conference" in sources_used:
-                researchers.append(self.conference_service.convert_to_researcher_model(lead_dict, user_id))
+                researchers.append(self.conference_service.convert_to_researcher_model(researcher_dict, user_id))
             elif "funding" in sources_used:
-                researchers.append(self.funding_service.convert_to_researcher_model(lead_dict, user_id))
+                researchers.append(self.funding_service.convert_to_researcher_model(researcher_dict, user_id))
         return researchers
 
     def is_source_available(self, source: DataSourceType) -> bool:
@@ -210,7 +210,7 @@ class DataSourceManager:
         year: Optional[int] = None,
         **kwargs,
     ) -> List[Dict]:
-        return await self.conference_service.search_leads(
+        return await self.conference_service.search_researchers(
             query=query,
             conferences=conferences,
             year=year,
@@ -228,7 +228,7 @@ class DataSourceManager:
         **kwargs,
     ) -> List[Dict]:
         """Delegate to FundingService for NIH RePORTER queries."""
-        return await self.funding_service.search_leads(
+        return await self.funding_service.search_researchers(
             query=query,
             fiscal_years=fiscal_years,
             max_results=max_results,

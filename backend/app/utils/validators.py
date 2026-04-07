@@ -503,45 +503,9 @@ def validate_lead_data(data: Dict[str, Any]) -> tuple[bool, List[str]]:
     return len(errors) == 0, errors
 
 
-def validate_pipeline_config(config: Dict[str, Any]) -> tuple[bool, List[str]]:
-    """
-    Validate pipeline configuration
-
-    Args:
-        config: Pipeline configuration dictionary
-
-    Returns:
-        Tuple of (is_valid, list of error messages)
-    """
-    errors = []
-
-    # Required: search_queries
-    if "search_queries" not in config:
-        errors.append("search_queries is required")
-    elif not config["search_queries"]:
-        errors.append("At least one search query is required")
-    else:
-        for i, query in enumerate(config["search_queries"]):
-            if "query" not in query:
-                errors.append(f"Query #{i+1}: 'query' field is required")
-            if "source" not in query:
-                errors.append(f"Query #{i+1}: 'source' field is required")
-
-    # Validate filters (optional)
-    if "filters" in config:
-        filters = config["filters"]
-        if "min_score" in filters:
-            is_valid, error = DataValidator.validate_score(filters["min_score"])
-            if not is_valid:
-                errors.append(f"filters.min_score: {error}")
-
-    return len(errors) == 0, errors
-
-
 # Export all
 __all__ = [
     "ValidationError",
     "DataValidator",
-    "validate_lead_data",
-    "validate_pipeline_config",
+    "validate_lead_data"
 ]

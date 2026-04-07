@@ -59,7 +59,7 @@ class ExportService:
         # Generate filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         extension = self._get_extension(format)
-        filename = f"leads_export_{timestamp}.{extension}"
+        filename = f"researchers_export_{timestamp}.{extension}"
 
         # Create export record
         export = Export(
@@ -101,7 +101,7 @@ class ExportService:
             await db.commit()
 
             # Get researchers with filters
-            researchers = await self._get_leads_for_export(
+            researchers = await self._get_researchers_for_export(
                 user_id=export.user_id, filters=export.filters, db=db
             )
 
@@ -111,7 +111,7 @@ class ExportService:
                 raise ValueError("No researchers match the filters")
 
             # Convert to DataFrame
-            df = self._leads_to_dataframe(researchers, export.columns)
+            df = self._researchers_to_dataframe(researchers, export.columns)
 
             # Generate file based on format
             file_data = await self._generate_file(df, export.format)
@@ -146,7 +146,7 @@ class ExportService:
             await db.commit()
             raise
 
-    async def _get_leads_for_export(
+    async def _get_researchers_for_export(
         self, user_id: UUID, filters: Dict[str, Any], db: AsyncSession
     ) -> List[Researcher]:
         """Get researchers matching filters"""
@@ -188,7 +188,7 @@ class ExportService:
         result = await db.execute(query)
         return result.scalars().all()
 
-    def _leads_to_dataframe(
+    def _researchers_to_dataframe(
         self, researchers: List[Researcher], columns: Optional[List[str]] = None
     ) -> pd.DataFrame:
         """Convert researchers to pandas DataFrame"""
@@ -222,7 +222,7 @@ class ExportService:
         # Convert researchers to dict
         data = []
         for researcher in researchers:
-            lead_dict = {}
+            researcher_dict = {}
             for col in cols:
                 if hasattr(researcher, col):
                     value = getattr(researcher, col)
@@ -233,9 +233,9 @@ class ExportService:
                     elif isinstance(value, list):
                         value = ", ".join(str(v) for v in value)
 
-                    lead_dict[col] = value
+                    researcher_dict[col] = value
 
-            data.append(lead_dict)
+            data.append(researcher_dict)
 
         df = pd.DataFrame(data)
 

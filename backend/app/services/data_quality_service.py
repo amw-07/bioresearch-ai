@@ -20,7 +20,7 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 @dataclass
-class LeadQualityResult:
+class ResearcherQualityResult:
     passes: bool
     completeness: float
     issues: List[str] = field(default_factory=list)
@@ -50,7 +50,7 @@ class DataQualityService:
         "relevance_score",
     )
 
-    def validate_lead(self, researcher: Dict[str, Any]) -> LeadQualityResult:
+    def validate_researcher(self, researcher: Dict[str, Any]) -> ResearcherQualityResult:
         issues: List[str] = []
         warnings: List[str] = []
         field_scores: Dict[str, bool] = {}
@@ -114,7 +114,7 @@ class DataQualityService:
         if completeness < _MIN_COMPLETENESS_TO_SAVE:
             issues.append(f"completeness_too_low:{completeness:.0%}")
 
-        return LeadQualityResult(
+        return ResearcherQualityResult(
             passes=not issues,
             completeness=completeness,
             issues=issues,
@@ -138,7 +138,7 @@ class DataQualityService:
                 _increment(rejection_counts, "duplicate_name")
                 continue
 
-            result = self.validate_lead(researcher)
+            result = self.validate_researcher(researcher)
             completeness_sum += result.completeness
 
             if result.passes:
@@ -167,8 +167,8 @@ class DataQualityService:
         )
         return passing, report
 
-    def check_existing_researcher(self, researcher: Researcher) -> LeadQualityResult:
-        lead_dict = {
+    def check_existing_researcher(self, researcher: Researcher) -> ResearcherQualityResult:
+        researcher_dict = {
             "name": researcher.name,
             "title": researcher.title,
             "company": researcher.company,
@@ -177,7 +177,7 @@ class DataQualityService:
             "location": researcher.location,
             "relevance_score": researcher.relevance_score,
         }
-        return self.validate_lead(lead_dict)
+        return self.validate_researcher(researcher_dict)
 
 
 def _normalise_name(name: str) -> str:
@@ -204,7 +204,7 @@ def get_data_quality_service() -> DataQualityService:
 
 __all__ = [
     "DataQualityService",
-    "LeadQualityResult",
+    "ResearcherQualityResult",
     "PipelineQualityReport",
     "get_data_quality_service",
 ]
