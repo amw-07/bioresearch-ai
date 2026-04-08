@@ -117,7 +117,7 @@ async def enrich_researchers_batch(
             await UsageService.record(
                 db=db,
                 user_id=current_user.id,
-                event_type=UsageEventType.LEAD_ENRICHED,
+                event_type=UsageEventType.RESEARCHER_ENRICHED,
                 quantity=len(successful_ids),
                 metadata={"source": "batch", "researcher_count": len(successful_ids)},
             )
@@ -206,7 +206,7 @@ async def enrich_researcher(
             await UsageService.record(
                 db=db,
                 user_id=current_user.id,
-                event_type=UsageEventType.LEAD_ENRICHED,
+                event_type=UsageEventType.RESEARCHER_ENRICHED,
                 quantity=enriched_count,
                 metadata={
                     "researcher_id": str(researcher.id),

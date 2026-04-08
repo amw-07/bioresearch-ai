@@ -9,5 +9,5 @@ from enum import Enum
 
 class UsageEventType(str, Enum):
     SEARCH_EXECUTED = "search_executed"
-    LEAD_ENRICHED = "lead_enriched"
+    RESEARCHER_ENRICHED = "researcher_enriched"
     EXPORT_GENERATED = "export_generated"
