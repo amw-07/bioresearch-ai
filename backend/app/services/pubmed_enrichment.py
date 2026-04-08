@@ -3,14 +3,14 @@ PubMed Enrichment Service — Phase 2.3 Step 1 Fix
 =================================================
 
 Bridges the gap between:
-  - EnrichmentService.enrich_lead() — the entry point
-  - PubMedService.get_author_profile() — the data source
+    - EnrichmentService.enrich_researcher() — the entry point
+    - PubMedService.get_author_profile() — the data source
 
 Fixes the broken call chain documented in the Phase 2.3 Step 1 audit:
 
   POST /api/v1/enrich/{researcher_id}?services=pubmed
      → EnrichmentService._enrich_pubmed()         [NEW in Fix 4]
-     → PubMedEnrichmentService.enrich_lead_pubmed()  [THIS FILE]
+    → PubMedEnrichmentService.enrich_researcher_pubmed()  [THIS FILE]
      → PubMedService.get_author_profile()          [EXISTS — Phase 2.3 Step 1]
 
 Additional data quality features implemented here:
@@ -41,7 +41,7 @@ class PubMedEnrichmentService:
     def __init__(self, pubmed_service: Optional[PubMedService] = None) -> None:
         self._pubmed = pubmed_service or get_pubmed_service()
 
-    async def enrich_lead_pubmed(
+    async def enrich_researcher_pubmed(
         self,
         researcher: Researcher,
         db: AsyncSession,
@@ -52,7 +52,7 @@ class PubMedEnrichmentService:
         if not researcher.name or researcher.name == "Unknown":
             return {
                 "status": "error",
-                "reason": "lead_has_no_name",
+                "reason": "researcher_has_no_name",
                 "score_boost": 0,
                 "tags_applied": [],
             }

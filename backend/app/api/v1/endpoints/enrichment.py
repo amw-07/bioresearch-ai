@@ -152,9 +152,9 @@ async def enrich_researchers_batch(
     summary="Enrich researcher",
     description="Enrich a single researcher with external data",
 )
-async def enrich_lead(
+async def enrich_researcher(
     researcher_id: UUID,
-    request: EnrichLeadRequest,
+    request: EnrichResearcherRequest,
     http_request: Request,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -197,7 +197,7 @@ async def enrich_lead(
 
     try:
         # Enrich researcher
-        enrichment_result = await service.enrich_lead(
+        enrichment_result = await service.enrich_researcher(
             researcher=researcher, db=db, services=request.services
         )
 

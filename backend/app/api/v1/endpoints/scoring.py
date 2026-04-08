@@ -69,7 +69,7 @@ async def recalculate_lead_score(researcher_id: UUID, request: RecalculateReques
         await db.commit()
         return {"researcher_id": str(researcher_id), "old_score": old_score, "new_score": researcher.relevance_score, "relevance_tier": researcher.relevance_tier, "method": "manual_override"}
     weight_overrides = _validate_weight_overrides(request.weights.to_overrides()) if request.weights else None
-    score, breakdown = await svc.score_lead(researcher, db, weight_overrides)
+    score, breakdown = await svc.score_researcher(researcher, db, weight_overrides)
     return {"researcher_id": str(researcher_id), "old_score": old_score, "new_score": score, "relevance_tier": researcher.relevance_tier, "breakdown": breakdown, "method": "weighted_feature_scoring_v1"}
 
 
@@ -84,7 +84,7 @@ async def bulk_recalculate_scores(request: BulkRecalculateRequest, current_user:
     found_ids = {researcher.id for researcher in researchers}
     for researcher in researchers:
         try:
-            await svc.score_lead(researcher, db, weight_overrides)
+            await svc.score_researcher(researcher, db, weight_overrides)
             success_count += 1
         except Exception as exc:
             errors.append({"id": str(researcher.id), "error": str(exc)})
@@ -98,7 +98,7 @@ async def bulk_recalculate_scores(request: BulkRecalculateRequest, current_user:
 @router.post("/researchers/all/recalculate", response_model=dict, summary="Rescore all researchers for current user")
 async def rescore_all_researchers(current_user: User = Depends(get_current_active_user), db: AsyncSession = Depends(get_db)):
     weight_overrides = current_user.preferences.get("scoring_weights") if current_user.preferences else None
-    summary = await get_scoring_service().batch_rescore(current_user.id, db, weight_overrides)
+    summary = await get_scoring_service().batch_rescore_researchers(current_user.id, db, weight_overrides)
     return {"status": "complete", **summary}
 
 

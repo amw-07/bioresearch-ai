@@ -172,7 +172,7 @@ class SearchService:
         try:
             from app.services.scoring_service import get_scoring_service
 
-            score, _ = get_scoring_service().score_lead_sync(researcher)
+            score, _ = get_scoring_service().score_researcher_sync(researcher)
             return score
         except Exception as exc:
             logger.warning("ScoringService failed, using baseline: %s", exc)

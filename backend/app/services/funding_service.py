@@ -183,7 +183,7 @@ class FundingService:
     ) -> Researcher:
         """
         Convert a grant dict (from search_leads) to a Researcher ORM instance.
-        Called by SearchService._dict_to_lead() when source == "funding".
+        Called by SearchService._dict_to_researcher() when source == "funding".
         """
         researcher = Researcher(
             user_id=user_id,
