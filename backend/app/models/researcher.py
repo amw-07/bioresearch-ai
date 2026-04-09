@@ -164,7 +164,7 @@ class Researcher(Base):
     )
 
     # Relationships
-    user = relationship("User", back_populates="researchers")
+    user = relationship("User", back_populates="researchers", foreign_keys=[user_id])
     assignee = relationship("User", foreign_keys=[assigned_to])
 
     # Indexes for common queries

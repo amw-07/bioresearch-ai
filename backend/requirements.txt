@@ -2,96 +2,87 @@
 #    uv export --frozen --no-dev --no-hashes -o requirements.txt
 aiohttp==3.9.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   upstash-redis
 aiosignal==1.4.0
     # via
     #   aiohttp
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 alembic==1.13.1
-    # via bioresearch-ai-backend
-amqp==5.3.1
-    # via
-    #   bioresearch-ai-backend
-    #   kombu
+    # via bioresearch-ai
 annotated-types==0.7.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pydantic
+anthropic>=0.25.0
+    # via bioresearch-ai
 anyio==4.12.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   httpx
     #   starlette
     #   watchfiles
 astroid==3.0.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pylint
 asttokens==3.0.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   stack-data
 async-timeout==5.0.1 ; python_full_version < '3.12'
     # via
     #   asyncpg
-    #   bioresearch-ai-backend
     #   redis
 asyncpg==0.29.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 attrs==25.4.0
     # via
     #   aiohttp
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 babel==2.17.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs-material
 bcrypt==4.1.2
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 beautifulsoup4==4.12.3
-    # via bioresearch-ai-backend
-billiard==4.2.4
-    # via
-    #   bioresearch-ai-backend
-    #   celery
+    # via bioresearch-ai
 biopython==1.83
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
+chromadb==0.5.3
+    # via bioresearch-ai
 black==23.12.1
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 blinker==1.9.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flask
 brotli==1.2.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   geventhttpclient
-celery==5.3.6
-    # via bioresearch-ai-backend
 certifi==2026.1.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   geventhttpclient
     #   httpcore
     #   httpx
     #   requests
-    #   sentry-sdk
 cffi==2.0.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   cryptography
     #   gevent
     #   pyzmq
 charset-normalizer==3.4.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   requests
 click==8.3.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   black
-    #   celery
     #   click-didyoumean
     #   click-plugins
     #   click-repl
@@ -99,20 +90,14 @@ click==8.3.1
     #   mkdocs
     #   uvicorn
 click-didyoumean==0.3.1
-    # via
-    #   bioresearch-ai-backend
-    #   celery
+    # via bioresearch-ai
 click-plugins==1.1.1.2
-    # via
-    #   bioresearch-ai-backend
-    #   celery
+    # via bioresearch-ai
 click-repl==0.3.0
-    # via
-    #   bioresearch-ai-backend
-    #   celery
+    # via bioresearch-ai
 colorama==0.4.6
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   click
     #   ipython
     #   mkdocs
@@ -121,122 +106,120 @@ colorama==0.4.6
     #   pytest
 configargparse==1.7.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 coverage==7.13.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pytest-cov
-croniter==2.0.1
-    # via bioresearch-ai-backend
 cryptography==46.0.3
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 decorator==5.2.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipdb
     #   ipython
 deprecated==1.3.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   limits
 deprecation==2.1.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   postgrest
 dill==0.4.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pylint
 dnspython==2.8.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   email-validator
 ecdsa==0.19.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   python-jose
 email-validator==2.1.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 et-xmlfile==2.0.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   openpyxl
 executing==2.2.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   stack-data
 faker==22.0.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 fastapi==0.109.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 flake8==7.0.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 flask==3.1.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flask-basicauth
     #   flask-cors
     #   locust
 flask-basicauth==0.2.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 flask-cors==6.0.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 gevent==25.9.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   geventhttpclient
     #   locust
 geventhttpclient==2.3.7
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 ghp-import==2.1.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs
 gotrue==2.12.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   supabase
 greenlet==3.3.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   gevent
     #   sqlalchemy
 h11==0.16.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   httpcore
     #   uvicorn
 h2==4.3.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   httpx
 hiredis==2.3.2
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 hpack==4.1.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   h2
 httpcore==1.0.9
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   httpx
 httptools==0.7.1
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 httpx==0.26.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   gotrue
     #   postgrest
     #   storage3
@@ -244,71 +227,63 @@ httpx==0.26.0
     #   supafunc
 hyperframe==6.1.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   h2
 idna==3.11
     # via
     #   anyio
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   email-validator
     #   httpx
     #   requests
     #   yarl
 iniconfig==2.3.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pytest
 ipdb==0.13.13
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 ipython==8.19.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipdb
 isort==5.13.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pylint
 itsdangerous==2.2.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flask
 jedi==0.19.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipython
 jinja2==3.1.6
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flask
     #   mkdocs
     #   mkdocs-material
-joblib==1.5.3
-    # via
-    #   bioresearch-ai-backend
-    #   scikit-learn
-kombu==5.6.2
-    # via
-    #   bioresearch-ai-backend
-    #   celery
 limits==5.6.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   slowapi
 locust==2.20.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 mako==1.3.10
     # via
     #   alembic
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 markdown==3.10
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs
     #   mkdocs-material
     #   pymdown-extensions
 markupsafe==3.0.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flask
     #   jinja2
     #   mako
@@ -316,140 +291,137 @@ markupsafe==3.0.3
     #   werkzeug
 matplotlib-inline==0.2.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipython
 mccabe==0.7.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flake8
     #   pylint
 mergedeep==1.3.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs
 mkdocs==1.5.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs-material
 mkdocs-material==9.5.3
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 mkdocs-material-extensions==1.3.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs-material
 msgpack==1.1.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 multidict==6.7.0
     # via
     #   aiohttp
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   yarl
 mypy==1.8.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 mypy-extensions==1.1.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   black
     #   mypy
 numpy==1.26.3
     # via
     #   biopython
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pandas
-    #   scikit-learn
-    #   scipy
 openpyxl==3.1.2
-    # via bioresearch-ai-backend
-packaging==25.0
+    # via bioresearch-ai
+packaging==24.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   black
     #   deprecation
-    #   kombu
     #   limits
     #   mkdocs
     #   plotly
     #   pytest
 paginate==0.5.7
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs-material
 pandas==2.1.4
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 parso==0.8.5
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   jedi
 passlib==1.7.4
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pathspec==0.12.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   black
     #   mkdocs
 pexpect==4.9.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipython
 phonenumbers==8.13.27
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 platformdirs==4.5.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   black
     #   mkdocs
     #   pylint
 plotly==5.18.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pluggy==1.6.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pytest
 postgrest==0.16.11
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   supabase
 prompt-toolkit==3.0.52
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   click-repl
     #   ipython
 propcache==0.4.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   yarl
 psutil==7.2.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 psycopg2-binary==2.9.9
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 ptyprocess==0.7.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pexpect
 pure-eval==0.2.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   stack-data
 pyasn1==0.6.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   python-jose
     #   rsa
 pycodestyle==2.11.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flake8
 pycparser==2.23
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   cffi
 pydantic==2.5.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   fastapi
     #   gotrue
     #   postgrest
@@ -457,48 +429,46 @@ pydantic==2.5.3
     #   pydantic-settings
 pydantic-core==2.14.6
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pydantic
 pydantic-extra-types==2.3.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pydantic-settings==2.1.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pyflakes==3.2.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flake8
 pygments==2.19.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipython
     #   mkdocs-material
 pyjwt==2.10.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   gotrue
 pylint==3.0.3
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pymdown-extensions==10.20
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs-material
 pytest==7.4.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-mock
 pytest-asyncio==0.23.3
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pytest-cov==4.1.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pytest-mock==3.12.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 python-dateutil==2.8.2
     # via
-    #   bioresearch-ai-backend
-    #   celery
-    #   croniter
+    #   bioresearch-ai
     #   faker
     #   ghp-import
     #   pandas
@@ -506,137 +476,116 @@ python-dateutil==2.8.2
     #   storage3
 python-dotenv==1.0.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pydantic-settings
 python-jose==3.3.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 python-json-logger==2.0.7
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 python-multipart==0.0.6
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 pytz==2023.3
     # via
-    #   bioresearch-ai-backend
-    #   croniter
+    #   bioresearch-ai
     #   pandas
 pywin32==311 ; sys_platform == 'win32'
-    # via
-    #   bioresearch-ai-backend
-    #   locust
+    # via locust
 pyyaml==6.0.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs
     #   pymdown-extensions
     #   pyyaml-env-tag
 pyyaml-env-tag==1.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs
 pyzmq==27.1.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 realtime==1.0.6
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   supabase
 redis==5.0.1
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 regex==2025.11.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs-material
 requests==2.31.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
     #   mkdocs-material
-    #   resend
-    #   stripe
     #   upstash-redis
-resend==0.7.0
-    # via bioresearch-ai-backend
+sentence-transformers==2.7.0
+    # via bioresearch-ai
 roundrobin==0.0.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   locust
 rsa==4.9.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   python-jose
-scikit-learn==1.4.0
-    # via bioresearch-ai-backend
-scipy==1.16.3
-    # via
-    #   bioresearch-ai-backend
-    #   scikit-learn
-sentry-sdk==1.39.2
-    # via bioresearch-ai-backend
 setuptools==80.9.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 six==1.17.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ecdsa
     #   python-dateutil
+shap==0.44.1
+    # via bioresearch-ai
 slowapi==0.1.9
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 sniffio==1.3.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   httpx
 soupsieve==2.8.1
     # via
     #   beautifulsoup4
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 sqlalchemy==2.0.25
     # via
     #   alembic
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 stack-data==0.6.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipython
 starlette==0.35.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   fastapi
 storage3==0.7.7
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   supabase
 strenum==0.4.15
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   postgrest
-stripe==8.7.0
-    # via bioresearch-ai-backend
 supabase==2.6.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 supafunc==0.5.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   supabase
 tenacity==8.2.3
-    # via
-    #   bioresearch-ai-backend
-    #   plotly
-threadpoolctl==3.6.0
-    # via
-    #   bioresearch-ai-backend
-    #   scikit-learn
+    # via plotly
 tomli==2.4.1 ; python_full_version <= '3.11'
-    # via
-    #   bioresearch-ai-backend
-    #   coverage
+    # via coverage
 tomlkit==0.13.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   pylint
 traitlets==5.14.3
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   ipython
     #   matplotlib-inline
 typing-extensions==4.15.0
@@ -644,7 +593,7 @@ typing-extensions==4.15.0
     #   aiosignal
     #   alembic
     #   anyio
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   fastapi
     #   limits
     #   mypy
@@ -653,66 +602,58 @@ typing-extensions==4.15.0
     #   realtime
     #   sqlalchemy
     #   storage3
-    #   stripe
 tzdata==2025.3
     # via
-    #   bioresearch-ai-backend
-    #   celery
-    #   kombu
+    #   bioresearch-ai
     #   pandas
 upstash-redis==0.15.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 urllib3==2.6.2
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   geventhttpclient
     #   requests
-    #   sentry-sdk
 uvicorn==0.27.0
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 uvloop==0.22.1 ; sys_platform != 'win32'
-    # via bioresearch-ai-backend
-vine==5.1.0
-    # via
-    #   amqp
-    #   bioresearch-ai-backend
-    #   celery
-    #   kombu
+    # via bioresearch-ai
 watchdog==3.0.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   mkdocs
 watchfiles==1.1.1
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
 wcwidth==0.2.14
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   prompt-toolkit
 websockets==12.0
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   realtime
 werkzeug==3.1.4
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   flask
     #   flask-cors
     #   locust
 wrapt==2.0.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   deprecated
 xlsxwriter==3.1.9
-    # via bioresearch-ai-backend
+    # via bioresearch-ai
+xgboost==2.0.3
+    # via bioresearch-ai
 yarl==1.22.0
     # via
     #   aiohttp
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
 zope-event==6.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   gevent
 zope-interface==8.1.1
     # via
-    #   bioresearch-ai-backend
+    #   bioresearch-ai
     #   gevent

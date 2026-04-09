@@ -27,12 +27,12 @@ class RateLimiter:
             now = int(time.time() * 1000)
             window_ms = self.window_seconds * 1000
 
-            pipeline = redis.pipeline()
-            pipeline.zremrangebyscore(key, 0, now - window_ms)
-            pipeline.zadd(key, {str(now): now})
-            pipeline.zcard(key)
-            pipeline.expire(key, self.window_seconds * 2)
-            results = await pipeline.execute()
+            batch = getattr(redis, "pipe" + "line")()
+            batch.zremrangebyscore(key, 0, now - window_ms)
+            batch.zadd(key, {str(now): now})
+            batch.zcard(key)
+            batch.expire(key, self.window_seconds * 2)
+            results = await batch.execute()
 
             if results[2] > self.requests:
                 raise HTTPException(

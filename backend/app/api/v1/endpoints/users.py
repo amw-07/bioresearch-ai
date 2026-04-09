@@ -340,7 +340,7 @@ async def delete_account(
     - All researchers
     - All searches
     - All exports
-    - All pipelines
+    - All processing jobs
 
     (Cascade delete handled by database relationships)
     """

@@ -115,7 +115,10 @@ class User(Base):
 
     # Relationships
     researchers = relationship(
-        "Researcher", back_populates="user", cascade="all, delete-orphan"
+        "Researcher",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="Researcher.user_id",
     )
     searches = relationship(
         "Search", back_populates="user", cascade="all, delete-orphan"
