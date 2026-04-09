@@ -1,6 +1,7 @@
 """Enrichment service for researcher records."""
 
 import asyncio
+import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -9,19 +10,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import Cache, CacheKey
-from app.core.config import settings
 from app.models.researcher import Researcher
 from app.models.user import User
 from app.services.company_enricher import get_company_enricher
 from app.services.contact_service import get_contact_service
-from app.services.linkedin_service import get_linkedin_service
+from app.services.embedding_service import get_embedding_service
 from app.services.pubmed_enrichment import get_pubmed_enrichment_service
-from app.services.quota_manager import get_quota_manager
+from app.services.research_area_classifier import (
+    classify_research_area,
+    compute_domain_coverage_score,
+)
+from app.services.scoring_service import get_scoring_service
+
+logger = logging.getLogger(__name__)
 
 
 class EnrichmentService:
     def __init__(self):
-        self.hunter_api_key = settings.HUNTER_API_KEY
+        pass
 
     async def enrich_researcher(
         self, researcher: Researcher, db: AsyncSession, services: Optional[List[str]] = None
@@ -34,8 +40,6 @@ class EnrichmentService:
             tasks.append(("email", self._find_email(researcher)))
         if "company" in services and researcher.company:
             tasks.append(("company", self._enrich_company(researcher.company, researcher=researcher)))
-        if "linkedin" in services and researcher.name and researcher.company:
-            tasks.append(("linkedin", self._find_linkedin(researcher)))
         if "pubmed" in services and researcher.name:
             tasks.append(("pubmed", self._enrich_pubmed(researcher, db)))
 
@@ -78,7 +82,7 @@ class EnrichmentService:
             return cached
 
         finder = get_contact_service()
-        result = await finder.find_email(researcher, get_quota_manager())
+        result = await finder.find_email(researcher)
         if result and result.get("email"):
             await Cache.set(cache_key, result, ttl=86_400 * 30)
             return result
@@ -93,14 +97,14 @@ class EnrichmentService:
         result = await get_company_enricher().enrich_company(
             company_name=company_name,
             researcher=researcher,
-            quota_manager=get_quota_manager(),
+            quota_manager=None,
         )
         await Cache.set(cache_key, result, ttl=86_400)
         return result
 
     async def _find_linkedin(self, researcher: Researcher) -> Optional[Dict[str, Any]]:
-        result = await get_linkedin_service().find_profile_url(researcher)
-        return result if result.get("url") else None
+        """LinkedIn enrichment disabled — Proxycurl removed from portfolio stack."""
+        return None
 
     async def _enrich_pubmed(self, researcher: Researcher, db: AsyncSession) -> dict:
         return await get_pubmed_enrichment_service().enrich_researcher_pubmed(researcher=researcher, db=db)
@@ -111,13 +115,77 @@ class EnrichmentService:
             researcher.set_enrichment("email", enrichments["email"])
         if "company" in enrichments and enrichments["company"]:
             researcher.set_enrichment("company", enrichments["company"])
-        if "linkedin" in enrichments and enrichments["linkedin"]:
-            researcher.set_enrichment("linkedin", enrichments["linkedin"])
+        if "pubmed" in enrichments and enrichments["pubmed"]:
+            pubmed_data = enrichments["pubmed"]
+            if pubmed_data.get("abstract_text"):
+                researcher.abstract_text = pubmed_data["abstract_text"]
+            if pubmed_data.get("publication_count"):
+                researcher.publication_count = pubmed_data["publication_count"]
         await db.commit()
         await db.refresh(researcher)
+        await self._run_ai_pipeline(researcher, db)
+
+    async def _run_ai_pipeline(self, researcher: Researcher, db: AsyncSession) -> None:
+        """
+        Run the full AI enrichment pipeline after basic enrichments are applied.
+
+        Order:
+        1. Classify research area (classifier)
+        2. Compute domain_coverage_score (classifier-derived ML feature)
+        3. Index researcher in ChromaDB + compute abstract_relevance_score (embeddings)
+        4. Score with XGBoost + SHAP (ML scorer)
+        """
+        try:
+            title = researcher.publication_title or researcher.title
+            abstract = researcher.abstract_text
+
+            research_area = classify_research_area(
+                title=title,
+                abstract=abstract,
+            )
+            researcher.research_area = research_area
+
+            domain_score = compute_domain_coverage_score(
+                title=title,
+                abstract=abstract,
+            )
+            researcher.domain_coverage_score = domain_score
+
+            embedding_svc = get_embedding_service()
+            abstract_relevance = await embedding_svc.compute_abstract_relevance(
+                title=title,
+                abstract=abstract,
+            )
+            researcher.abstract_relevance_score = abstract_relevance
+
+            doc_id = await embedding_svc.index_researcher(
+                researcher_id=str(researcher.id),
+                title=title,
+                abstract=abstract,
+                research_area=research_area,
+                name=researcher.name,
+            )
+            researcher.abstract_embedding_id = doc_id
+
+            db.add(researcher)
+            await db.commit()
+            await db.refresh(researcher)
+
+            scoring_svc = get_scoring_service()
+            scoring_result = await scoring_svc.score_and_persist(researcher, db)
+
+            logger.info(
+                "AI pipeline complete for %s: area=%s score=%d tier=%s",
+                researcher.id,
+                research_area,
+                scoring_result["relevance_score"],
+                scoring_result["relevance_tier"],
+            )
+        except Exception as exc:
+            logger.error("AI pipeline failed for %s: %s", researcher.id, exc, exc_info=True)
 
     def _get_available_services(self) -> List[str]:
-        return ["email", "company", "linkedin", "pubmed"]
+        return ["email", "company", "pubmed"]
 
     async def get_enrichment_status(self, researcher: Researcher) -> Dict[str, Any]:
         enriched_fields = []
