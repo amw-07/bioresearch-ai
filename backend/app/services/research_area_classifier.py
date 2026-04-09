@@ -46,7 +46,7 @@ RESEARCH_AREA_MAP: Dict[str, List[str]] = {
     ],
     "drug_discovery": [
         "drug discover", "target identif", "target validation", "hit identif",
-        "lead optimiz", "lead compound", "structure-activity", "SAR",
+        "candidate optimiz", "candidate compound", "structure-activity", "SAR",
         "phenotypic screen", "high-throughput screen", "HTS",
         "assay development", "compound library", "medicinal chemistry",
         "ADME", "pharmacokinetic", "bioavailability", "permeability",

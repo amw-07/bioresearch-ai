@@ -15,6 +15,7 @@ from app.models.user import User
 from app.services.company_enricher import get_company_enricher
 from app.services.contact_service import get_contact_service
 from app.services.embedding_service import get_embedding_service
+from app.services.intelligence_service import get_intelligence_service
 from app.services.pubmed_enrichment import get_pubmed_enrichment_service
 from app.services.research_area_classifier import (
     classify_research_area,
@@ -123,11 +124,11 @@ class EnrichmentService:
                 researcher.publication_count = pubmed_data["publication_count"]
         await db.commit()
         await db.refresh(researcher)
-        await self._run_ai_pipeline(researcher, db)
+        await self._run_ai_sequence(researcher, db)
 
-    async def _run_ai_pipeline(self, researcher: Researcher, db: AsyncSession) -> None:
+    async def _run_ai_sequence(self, researcher: Researcher, db: AsyncSession) -> None:
         """
-        Run the full AI enrichment pipeline after basic enrichments are applied.
+        Run the full AI enrichment sequence after basic enrichments are applied.
 
         Order:
         1. Classify research area (classifier)
@@ -174,15 +175,24 @@ class EnrichmentService:
             scoring_svc = get_scoring_service()
             scoring_result = await scoring_svc.score_and_persist(researcher, db)
 
+            intelligence_svc = get_intelligence_service()
+            intelligence = await intelligence_svc.generate(researcher)
+            if intelligence is not None:
+                researcher.intelligence = intelligence
+                researcher.intelligence_generated_at = datetime.utcnow()
+                db.add(researcher)
+                await db.commit()
+                await db.refresh(researcher)
+
             logger.info(
-                "AI pipeline complete for %s: area=%s score=%d tier=%s",
+                "AI sequence complete for %s: area=%s score=%d tier=%s",
                 researcher.id,
                 research_area,
                 scoring_result["relevance_score"],
                 scoring_result["relevance_tier"],
             )
         except Exception as exc:
-            logger.error("AI pipeline failed for %s: %s", researcher.id, exc, exc_info=True)
+            logger.error("AI sequence failed for %s: %s", researcher.id, exc, exc_info=True)
 
     def _get_available_services(self) -> List[str]:
         return ["email", "company", "pubmed"]

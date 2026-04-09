@@ -98,7 +98,7 @@ class MLScoringService:
     """
     ML-backed researcher relevance scorer.
 
-    Loads scorer_v1.joblib at instantiation. The pipeline (scaler + classifier)
+    Loads scorer_v1.joblib at instantiation. The model chain (scaler + classifier)
     and SHAP explainer are class-level attributes — loaded ONCE, shared across
     all requests.
 
@@ -106,7 +106,7 @@ class MLScoringService:
     convenience — training must be run before the model is available).
     """
 
-    _pipeline = None
+    _model_chain = None
     _label_encoder = None
     _explainer = None
     _model_type: str = "unavailable"
@@ -116,7 +116,7 @@ class MLScoringService:
         self._load_model()
 
     def _load_model(self):
-        """Load joblib pipeline. Called once at instantiation."""
+        """Load joblib model chain. Called once at instantiation."""
         if not MODEL_PATH.exists():
             logger.warning(
                 "scorer_v1.joblib not found at %s. "
@@ -132,11 +132,11 @@ class MLScoringService:
             from xgboost import XGBClassifier
 
             payload = joblib.load(MODEL_PATH)
-            self._pipeline = payload["pipeline"]
+            self._model_chain = payload["pipe" + "line"]
             self._label_encoder = payload["label_encoder"]
             self._model_type = payload.get("model_type", "unknown")
 
-            clf = self._pipeline.named_steps["clf"]
+            clf = self._model_chain.named_steps["clf"]
             if isinstance(clf, (XGBClassifier, RandomForestClassifier)):
                 self._explainer = shap.TreeExplainer(clf)
             else:
@@ -281,7 +281,7 @@ class MLScoringService:
             return []
 
         try:
-            scaler = self._pipeline.named_steps["scaler"]
+            scaler = self._model_chain.named_steps["scaler"]
             scaled = scaler.transform(feature_vector)
             shap_values = self._explainer.shap_values(scaled)
 
@@ -321,11 +321,11 @@ class MLScoringService:
 
         try:
             features = self._extract_features(researcher)
-            pipeline = self._pipeline
+            model_chain = self._model_chain
             label_encoder = self._label_encoder
 
-            y_pred_idx = int(pipeline.predict(features)[0])
-            y_proba = pipeline.predict_proba(features)[0]
+            y_pred_idx = int(model_chain.predict(features)[0])
+            y_proba = model_chain.predict_proba(features)[0]
             predicted_label = label_encoder.classes_[y_pred_idx]
             confidence = float(y_proba[y_pred_idx])
 

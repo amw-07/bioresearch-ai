@@ -373,7 +373,7 @@ async def rerun_search(
     Useful for:
     - Finding new publications
     - Refreshing researcher data
-    - Periodic searches (before pipelines)
+    - Periodic searches (before scheduled refresh jobs)
 
     Creates a new search record with fresh results.
     """
