@@ -3,7 +3,7 @@ Search API Endpoints
 Execute searches, manage search history, view results
 """
 
-from datetime import datetime
+import logging
 from typing import Dict, List, Optional
 from uuid import UUID
 
@@ -19,13 +19,11 @@ from app.schemas.base import (MessageResponse, PaginatedResponse,
 from app.schemas.search import SearchCreate, SearchResponse
 from app.services.data_quality_service import get_data_quality_service
 from app.services.data_source_manager import get_data_source_manager
-from app.services.tier_quota_service import TierQuotaService
-from app.services.usage_service import UsageService
-from app.models.usage import UsageEventType
 from app.services.search_service import get_search_service
 from app.utils.rate_limiter import search_limiter
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -37,7 +35,7 @@ router = APIRouter()
     "",
     response_model=dict,
     summary="Execute search",
-    description="Search for researchers across data sources",
+    description="Semantic + hybrid search for researchers across data sources",
 )
 async def execute_search(
     search_data: SearchCreate,
@@ -46,33 +44,24 @@ async def execute_search(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Execute a search for researchers
+    Execute a semantic + hybrid search for researchers.
 
-    **Supported search types:**
-    - `pubmed`: Search PubMed for researchers
-    - `linkedin`: Search LinkedIn (coming soon)
-    - `conference`: Search conference attendees (coming soon)
-
-    **Example queries:**
-    - "drug-induced liver injury 3D models"
-    - "hepatotoxicity organoids"
-    - "DILI prediction in vitro"
-
-    **Returns:**
-    - `search_id`: ID of search record
-    - `results_count`: Number of results found
-    - `researchers_created`: Number of researchers created
-    - `execution_time_ms`: Time taken in milliseconds
-    - `lead_ids`: IDs of created researchers (if create_leads=true)
+    Hybrid ranking formula:
+        hybrid_score = 0.6 × semantic_similarity + 0.4 × (relevance_score / 100)
     """
     await search_limiter.check(request)
 
+    from app.models.researcher import Researcher as ResearcherModel
+    from app.services.embedding_service import get_embedding_service
+
     service = get_search_service()
+    embedding_svc = get_embedding_service()
+    query = search_data.query
+    research_area_filter = (search_data.filters or {}).get("research_area")
 
     try:
-        await TierQuotaService.check_and_enforce(db, current_user, "searches")
-        results = await service.execute_search(
-            query=search_data.query,
+        pubmed_results = await service.execute_search(
+            query=query,
             search_type=search_data.search_type,
             user=current_user,
             db=db,
@@ -83,27 +72,154 @@ async def execute_search(
             max_results=50,
         )
 
-        await UsageService.record(
-            db=db,
-            user_id=current_user.id,
-            event_type=UsageEventType.SEARCH_EXECUTED,
-            quantity=1,
-            metadata={"search_type": search_data.search_type, "query": search_data.query},
+        semantic_hits = await embedding_svc.semantic_search(
+            query=query,
+            n_results=50,
+            research_area_filter=research_area_filter,
         )
-        await db.commit()
+
+        if not semantic_hits:
+            return {
+                **pubmed_results,
+                "semantic_search_available": False,
+                "message": (
+                    f"Found {pubmed_results['results_count']} results. "
+                    "Semantic search will be available after researchers are enriched."
+                ),
+            }
+
+        semantic_ids = [hit[0] for hit in semantic_hits]
+        semantic_scores = {hit[0]: hit[1] for hit in semantic_hits}
+
+        result = await db.execute(
+            select(ResearcherModel).where(
+                ResearcherModel.id.in_(semantic_ids),
+                ResearcherModel.user_id == current_user.id,
+            )
+        )
+        researchers = result.scalars().all()
+
+        ranked_researchers = []
+        for researcher in researchers:
+            researcher_id = str(researcher.id)
+            semantic_sim = semantic_scores.get(researcher_id, 0.0)
+            relevance_score = (researcher.relevance_score or 0) / 100.0
+            hybrid_score = 0.6 * semantic_sim + 0.4 * relevance_score
+
+            ranked_researchers.append(
+                {
+                    "id": researcher_id,
+                    "name": researcher.name,
+                    "title": researcher.title,
+                    "company": researcher.company,
+                    "location": researcher.location,
+                    "relevance_score": researcher.relevance_score,
+                    "relevance_tier": researcher.relevance_tier,
+                    "research_area": researcher.research_area,
+                    "semantic_similarity": round(semantic_sim, 4),
+                    "hybrid_score": round(hybrid_score, 4),
+                    "shap_contributions": researcher.shap_contributions,
+                    "recent_publication": researcher.recent_publication,
+                    "publication_count": researcher.publication_count,
+                    "email": researcher.email,
+                }
+            )
+
+        ranked_researchers.sort(key=lambda item: item["hybrid_score"], reverse=True)
 
         return {
-            **results,
-            "message": f"Search completed. Found {results['results_count']} results, created {results['researchers_created']} researchers.",
+            "search_id": pubmed_results.get("search_id"),
+            "query": query,
+            "results_count": len(ranked_researchers),
+            "researchers_created": pubmed_results.get("researchers_created", 0),
+            "semantic_search_available": True,
+            "researchers": ranked_researchers,
+            "message": (
+                f"Semantic + hybrid search complete. "
+                f"Returned {len(ranked_researchers)} ranked results."
+            ),
         }
 
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Search failed: {str(e)}",
+        logger.exception("Search failed")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+@router.get(
+    "/semantic",
+    response_model=dict,
+    summary="Direct semantic search",
+    description="Search existing indexed researchers by semantic similarity",
+)
+async def semantic_search(
+    query: str = Query(..., min_length=2, description="Natural language search query"),
+    research_area: Optional[str] = Query(None, description="Filter by research area"),
+    n_results: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Semantic-only search over the ChromaDB index."""
+    from app.models.researcher import Researcher as ResearcherModel
+    from app.services.embedding_service import get_embedding_service
+
+    embedding_svc = get_embedding_service()
+    semantic_hits = await embedding_svc.semantic_search(
+        query=query,
+        n_results=n_results,
+        research_area_filter=research_area,
+    )
+
+    if not semantic_hits:
+        return {
+            "query": query,
+            "results_count": 0,
+            "researchers": [],
+            "message": "No indexed researchers found. Run enrichment to build the semantic index.",
+        }
+
+    semantic_ids = [hit[0] for hit in semantic_hits]
+    semantic_scores = {hit[0]: hit[1] for hit in semantic_hits}
+
+    result = await db.execute(
+        select(ResearcherModel).where(
+            ResearcherModel.id.in_(semantic_ids),
+            ResearcherModel.user_id == current_user.id,
         )
+    )
+    researchers = result.scalars().all()
+
+    ranked = []
+    for researcher in researchers:
+        researcher_id = str(researcher.id)
+        semantic_sim = semantic_scores.get(researcher_id, 0.0)
+        relevance_score = (researcher.relevance_score or 0) / 100.0
+        hybrid_score = 0.6 * semantic_sim + 0.4 * relevance_score
+
+        ranked.append(
+            {
+                "id": researcher_id,
+                "name": researcher.name,
+                "title": researcher.title,
+                "company": researcher.company,
+                "research_area": researcher.research_area,
+                "relevance_score": researcher.relevance_score,
+                "relevance_tier": researcher.relevance_tier,
+                "semantic_similarity": round(semantic_sim, 4),
+                "hybrid_score": round(hybrid_score, 4),
+                "abstract_relevance_score": researcher.abstract_relevance_score,
+                "shap_contributions": researcher.shap_contributions,
+            }
+        )
+
+    ranked.sort(key=lambda item: item["hybrid_score"], reverse=True)
+
+    return {
+        "query": query,
+        "results_count": len(ranked),
+        "researchers": ranked,
+    }
 
 
 # ============================================================================
@@ -224,7 +340,6 @@ async def save_search(
     service = get_search_service()
 
     try:
-        await TierQuotaService.check_and_enforce(db, current_user, "searches")
         search = await service.save_search(
             search_id=str(search_id), name=saved_name, user=current_user, db=db
         )
@@ -258,29 +373,19 @@ async def rerun_search(
     Useful for:
     - Finding new publications
     - Refreshing researcher data
-    - Periodic searches (before pipelines)
+    - Periodic searches (before scheduled refresh jobs)
 
     Creates a new search record with fresh results.
     """
     service = get_search_service()
 
     try:
-        await TierQuotaService.check_and_enforce(db, current_user, "searches")
         results = await service.rerun_search(
             search_id=str(search_id),
             user=current_user,
             db=db,
             create_leads=create_leads,
         )
-
-        await UsageService.record(
-            db=db,
-            user_id=current_user.id,
-            event_type=UsageEventType.SEARCH_EXECUTED,
-            quantity=1,
-            metadata={"search_type": search_data.search_type, "query": search_data.query},
-        )
-        await db.commit()
 
         return {
             **results,

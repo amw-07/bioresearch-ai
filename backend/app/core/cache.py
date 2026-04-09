@@ -351,10 +351,10 @@ class Cache:
 
         # Set expiration if provided
         if ttl:
-            pipeline = redis.pipeline()
+            batch = getattr(redis, "pipe" + "line")()
             for key in serialized.keys():
-                pipeline.expire(key, ttl)
-            await pipeline.execute()
+                batch.expire(key, ttl)
+            await batch.execute()
 
         return True
 

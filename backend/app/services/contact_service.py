@@ -39,7 +39,7 @@ class ContactService:
     async def find_email(
         self,
         researcher: Researcher,
-        quota_manager: "QuotaManager",
+        quota_manager: Optional["QuotaManager"] = None,
         force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Discover the professional contact information for a researcher."""
@@ -120,7 +120,12 @@ class ContactService:
             "domain": domain,
         }
 
-    async def _try_hunter_domain(self, name: str, domain: str, quota_manager: "QuotaManager") -> Optional[Dict[str, Any]]:
+    async def _try_hunter_domain(
+        self,
+        name: str,
+        domain: str,
+        quota_manager: Optional["QuotaManager"] = None,
+    ) -> Optional[Dict[str, Any]]:
         domain_cache_key = f"hunter:domain:{hashlib.sha256(domain.encode()).hexdigest()}"
         domain_data = await Cache.get(domain_cache_key)
 
@@ -132,7 +137,8 @@ class ContactService:
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     domain_data = json.loads(resp.read().decode())
                 await Cache.set(domain_cache_key, domain_data, ttl=_TTL_DOMAIN_RESULTS)
-                await quota_manager.record_hunter_use()
+                if quota_manager is not None:
+                    await quota_manager.record_hunter_use()
             except Exception:
                 return None
 
@@ -179,7 +185,7 @@ def get_contact_confidence(contact_result: Optional[Dict[str, Any]]) -> float:
 
 async def find_researcher_contact(
     researcher: Researcher,
-    quota_manager: "QuotaManager",
+    quota_manager: Optional["QuotaManager"] = None,
     force_refresh: bool = False,
 ) -> Dict[str, Any]:
     service = get_contact_service()
