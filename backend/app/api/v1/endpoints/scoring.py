@@ -150,3 +150,24 @@ async def get_scoring_stats(current_user: User = Depends(get_current_active_user
         },
         "algorithm": "weighted_feature_scoring_v1",
     }
+
+
+@router.get("/metrics", response_model=dict, summary="Get ML model evaluation metrics")
+async def get_model_metrics():
+    """
+    Return eval_v1.json contents for the ModelMetricsDashboard frontend component.
+    Schema is locked — do not change field names without updating the frontend.
+    """
+    import json
+    from pathlib import Path
+
+    eval_path = Path(__file__).parent.parent.parent.parent.parent / "ml" / "reports" / "eval_v1.json"
+
+    if not eval_path.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="Model evaluation report not found. Run: uv run python ml/train_scorer.py",
+        )
+
+    with open(eval_path, encoding="utf-8") as file:
+        return json.load(file)

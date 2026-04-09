@@ -137,6 +137,9 @@ class Settings(BaseSettings):
     # External APIs — PubMed / NCBI Entrez
     PUBMED_EMAIL: str
     PUBMED_API_KEY: Optional[str] = None
+    # Anthropic — LLM intelligence (Component 3, Week 3)
+    # Optional — if absent, intelligence_service returns None gracefully
+    ANTHROPIC_API_KEY: Optional[str] = None
     # Server-wide search defaults (can be overridden per-request via API filters)
     PUBMED_DEFAULT_YEARS_BACK: int = 3
     PUBMED_MAX_RESULTS_PER_QUERY: int = 50
