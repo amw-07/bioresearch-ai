@@ -13,12 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_active_user, get_db
 from app.models.researcher import Researcher as Researcher
-from app.models.usage import UsageEventType
 from app.models.user import User
 from app.schemas.base import BulkOperationResponse, MessageResponse
 from app.services.enrichment_service import get_enrichment_service
-from app.services.quota_manager import get_quota_manager
-from app.services.usage_service import UsageService
 from app.utils.rate_limiter import enrich_limiter
 
 router = APIRouter()
@@ -114,13 +111,6 @@ async def enrich_researchers_batch(
             row["researcher_id"] for row in results["results"] if row["status"] == "success"
         ]
         if successful_ids:
-            await UsageService.record(
-                db=db,
-                user_id=current_user.id,
-                event_type=UsageEventType.RESEARCHER_ENRICHED,
-                quantity=len(successful_ids),
-                metadata={"source": "batch", "researcher_count": len(successful_ids)},
-            )
             await db.commit()
 
         return BulkOperationResponse(
@@ -203,16 +193,6 @@ async def enrich_researcher(
 
         enriched_count = len(enrichment_result["enrichments"])
         if enriched_count > 0:
-            await UsageService.record(
-                db=db,
-                user_id=current_user.id,
-                event_type=UsageEventType.RESEARCHER_ENRICHED,
-                quantity=enriched_count,
-                metadata={
-                    "researcher_id": str(researcher.id),
-                    "services": list(enrichment_result["enrichments"].keys()),
-                },
-            )
             await db.commit()
 
         # Extract pubmed-specific summary fields for the top-level response
@@ -307,10 +287,6 @@ async def get_available_services():
     - Cost (free/paid)
     - Rate limits
     """
-    quota_manager = get_quota_manager()
-    hunter_status = await quota_manager.get_hunter_status()
-    clearbit_status = await quota_manager.get_clearbit_status()
-
     services = {
         "email": {
             "name": "Email Finder",
@@ -360,7 +336,6 @@ async def get_available_services():
 
     return {
         "services": services,
-        "quota_status": await quota_manager.get_all_quota_status(),
     }
 
 
@@ -381,5 +356,4 @@ async def get_quota_status(
     - Clearbit: used/remaining (50/month, pharma researchers score ≥ 50 only)
     - Reset date: first of next month
     """
-    quota_manager = get_quota_manager()
-    return await quota_manager.get_all_quota_status()
+    return {"quota_status": {}, "message": "Quota management not active in this deployment"}

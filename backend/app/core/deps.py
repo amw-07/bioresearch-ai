@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 FastAPI Dependencies
 Authentication, authorization, and database session management
@@ -15,7 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.cache import Cache, CacheKey
 from app.core.database import get_async_db
 from app.core.security import verify_api_key, verify_token
-from app.models.user import SubscriptionTier, User
 from app.schemas.token import TokenData
 
 # Security schemes

@@ -4,12 +4,11 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import check_researcher_quota, get_current_active_user, get_db
 from app.models.researcher import Researcher
-from app.models.team import TeamMembership
 from app.models.user import User
 from app.schemas.base import BulkDeleteRequest, BulkOperationResponse, MessageResponse, PaginatedResponse
 from app.schemas.researcher import (
@@ -53,16 +52,8 @@ async def list_researchers(
     db: AsyncSession = Depends(get_db),
 ):
     await leads_limiter.check(request)
-
-    team_ids_subq = (
-        select(TeamMembership.team_id)
-        .where(TeamMembership.user_id == current_user.id)
-        .scalar_subquery()
-    )
-
-    query = select(Researcher).where(
-        or_(Researcher.user_id == current_user.id, Researcher.team_id.in_(team_ids_subq))
-    )
+    
+    query = select(Researcher).where(Researcher.user_id == current_user.id)
 
     if search:
         query = query.where(

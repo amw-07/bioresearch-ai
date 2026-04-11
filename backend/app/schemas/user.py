@@ -8,7 +8,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.models.user import SubscriptionTier
 from app.schemas.base import BaseSchema, TimestampSchema, UUIDSchema
 
 # ============================================================================
@@ -105,7 +104,6 @@ class UserBase(BaseSchema):
     id: UUID
     email: EmailStr
     full_name: str
-    subscription_tier: SubscriptionTier
     is_active: bool
     is_verified: bool
 
@@ -115,7 +113,6 @@ class UserBase(BaseSchema):
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "email": "user@example.com",
                 "full_name": "John Doe",
-                "subscription_tier": "free",
                 "is_active": True,
                 "is_verified": True,
             }
@@ -138,7 +135,6 @@ class UserProfile(UserBase, TimestampSchema):
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "email": "user@example.com",
                 "full_name": "John Doe",
-                "subscription_tier": "pro",
                 "is_active": True,
                 "is_verified": True,
                 "last_login_at": "2024-12-30T12:00:00Z",
@@ -351,7 +347,6 @@ class UserUsageStats(BaseSchema):
     searches_this_month: int
     exports_this_month: int
     api_calls_today: int
-    subscription_tier: SubscriptionTier
     usage_percentage: float = Field(..., description="Percentage of monthly limit used")
 
     model_config = {
@@ -362,7 +357,6 @@ class UserUsageStats(BaseSchema):
                 "searches_this_month": 12,
                 "exports_this_month": 5,
                 "api_calls_today": 150,
-                "subscription_tier": "free",
                 "usage_percentage": 45.0,
             }
         }

@@ -9,14 +9,12 @@ import re
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from app.core.cache import Cache
 from app.core.config import settings
 from app.models.researcher import Researcher
 
-if TYPE_CHECKING:
-    from app.services.quota_manager import QuotaManager
 
 logger = logging.getLogger(__name__)
 
@@ -55,18 +53,17 @@ class CompanyEnricher:
         self,
         company_name: str,
         researcher: Optional[Researcher] = None,
-        quota_manager: Optional["QuotaManager"] = None,
     ) -> Dict[str, Any]:
         if researcher:
             nih_result = self._try_nih_company_data(researcher)
             if nih_result:
                 return nih_result
 
-        if self._clearbit_key and quota_manager and researcher:
-            if await self._should_call_clearbit(researcher, quota_manager):
+        if self._clearbit_key and researcher:
+            if await self._should_call_clearbit(researcher):
                 domain = _extract_domain_from_company(company_name)
                 if domain:
-                    clearbit = await self._call_clearbit(domain, quota_manager)
+                    clearbit = await self._call_clearbit(domain)
                     if clearbit:
                         return clearbit
 
@@ -95,20 +92,11 @@ class CompanyEnricher:
             "source": "nih_reporter",
         }
 
-    async def _should_call_clearbit(self, researcher: Researcher, quota_manager: "QuotaManager") -> bool:
-        from app.services.contact_service import _get_institution_type
+    async def _should_call_clearbit(self, researcher: "Researcher") -> bool:
+        """Return True if Clearbit key is configured and domain is available."""
+        return bool(self._clearbit_key and researcher)
 
-        if _get_institution_type(researcher) == "academic":
-            return False
-        current_funding = researcher.company_funding or "Unknown"
-        if current_funding not in ("Unknown", "", None):
-            return False
-        score = researcher.relevance_score or 0
-        if score < settings.CLEARBIT_MIN_SCORE_FOR_API:
-            return False
-        return await quota_manager.can_use_clearbit(score)
-
-    async def _call_clearbit(self, domain: str, quota_manager: "QuotaManager") -> Optional[Dict[str, Any]]:
+    async def _call_clearbit(self, domain: str) -> Optional[Dict[str, Any]]:
         cache_key = f"clearbit:company:{hashlib.sha256(domain.encode()).hexdigest()}"
         cached = await Cache.get(cache_key)
         if cached is not None:
@@ -123,13 +111,13 @@ class CompanyEnricher:
                 raw = json.loads(resp.read().decode())
             result = self._parse_clearbit_response(raw)
             await Cache.set(cache_key, result, ttl=_TTL_COMPANY_DATA)
-            await quota_manager.record_clearbit_use()
             return result
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 await Cache.set(cache_key, {"source": "clearbit_not_found"}, ttl=86_400 * 7)
             elif e.code == 429:
-                await quota_manager.mark_clearbit_exhausted()
+                logger.warning(f"Clearbit rate limit hit when looking up domain {domain}")
+                await Cache.set(cache_key, {"source": "clearbit_rate_limited"}, ttl=3600)
             return None
         except Exception:
             return None

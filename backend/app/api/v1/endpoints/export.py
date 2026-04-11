@@ -17,9 +17,6 @@ from app.schemas.base import (MessageResponse, PaginatedResponse,
                               SuccessResponse)
 from app.schemas.export import ExportCreate, ExportResponse
 from app.services.export_service import get_export_service
-from app.services.tier_quota_service import TierQuotaService
-from app.services.usage_service import UsageService
-from app.models.usage import UsageEventType
 from app.utils.rate_limiter import export_limiter
 
 router = APIRouter()
@@ -71,7 +68,6 @@ async def create_export(
     service = get_export_service()
 
     try:
-        await TierQuotaService.check_and_enforce(db, current_user, "exports")
         # Create export record
         export = await service.create_export(
             user=current_user,
@@ -84,13 +80,6 @@ async def create_export(
         # Queue background job
         background_tasks.add_task(process_export_background, export.id, db)
 
-        await UsageService.record(
-            db=db,
-            user_id=current_user.id,
-            event_type=UsageEventType.EXPORT_GENERATED,
-            quantity=1,
-            metadata={"format": str(export_data.format)},
-        )
         await db.commit()
 
         # Convert to response
@@ -108,7 +97,6 @@ async def process_export_background(export_id: UUID, db: AsyncSession):
     service = get_export_service()
 
     try:
-        await TierQuotaService.check_and_enforce(db, current_user, "exports")
         await service.execute_export(export_id, db)
     except Exception as e:
         print(f"Export processing failed: {e}")

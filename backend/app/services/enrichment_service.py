@@ -98,7 +98,6 @@ class EnrichmentService:
         result = await get_company_enricher().enrich_company(
             company_name=company_name,
             researcher=researcher,
-            quota_manager=None,
         )
         await Cache.set(cache_key, result, ttl=86_400)
         return result

@@ -153,7 +153,6 @@ class CacheKey:
         """
         Cache key for a LinkedIn profile lookup result.
         TTL: 7 days — preserves Google CSE daily quota.
-        Use LinkedInService._build_cache_key(researcher) to generate the hash.
         """
         return f"linkedin:profile:{lead_id_and_name_hash}"
 

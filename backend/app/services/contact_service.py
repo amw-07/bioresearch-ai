@@ -10,14 +10,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from app.core.cache import Cache
 from app.core.config import settings
 from app.models.researcher import Researcher
-
-if TYPE_CHECKING:
-    from app.services.quota_manager import QuotaManager
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +36,6 @@ class ContactService:
     async def find_email(
         self,
         researcher: Researcher,
-        quota_manager: Optional["QuotaManager"] = None,
         force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Discover the professional contact information for a researcher."""
@@ -63,10 +59,10 @@ class ContactService:
             if academic:
                 result = academic
 
-        if self._hunter_key and quota_manager is not None:
+        if self._hunter_key is not None:
             domain = _extract_company_domain(researcher)
             if domain:
-                hunter_result = await self._try_hunter_domain(researcher.name, domain, quota_manager)
+                hunter_result = await self._try_hunter_domain(researcher.name, domain)
                 if hunter_result and hunter_result["confidence"] >= _CONF_STORE:
                     return await self._cache_and_return(cache_key, hunter_result)
                 if hunter_result and (not result or hunter_result["confidence"] > result["confidence"]):
@@ -124,7 +120,6 @@ class ContactService:
         self,
         name: str,
         domain: str,
-        quota_manager: Optional["QuotaManager"] = None,
     ) -> Optional[Dict[str, Any]]:
         domain_cache_key = f"hunter:domain:{hashlib.sha256(domain.encode()).hexdigest()}"
         domain_data = await Cache.get(domain_cache_key)
@@ -137,8 +132,6 @@ class ContactService:
                 with urllib.request.urlopen(req, timeout=8) as resp:
                     domain_data = json.loads(resp.read().decode())
                 await Cache.set(domain_cache_key, domain_data, ttl=_TTL_DOMAIN_RESULTS)
-                if quota_manager is not None:
-                    await quota_manager.record_hunter_use()
             except Exception:
                 return None
 
@@ -185,11 +178,10 @@ def get_contact_confidence(contact_result: Optional[Dict[str, Any]]) -> float:
 
 async def find_researcher_contact(
     researcher: Researcher,
-    quota_manager: Optional["QuotaManager"] = None,
     force_refresh: bool = False,
 ) -> Dict[str, Any]:
     service = get_contact_service()
-    return await service.find_email(researcher, quota_manager, force_refresh=force_refresh)
+    return await service.find_email(researcher, force_refresh=force_refresh)
 
 
 def _not_found(reason: str = "") -> Dict[str, Any]:

@@ -12,7 +12,6 @@ from typing import Dict, List, Optional, Set
 from app.models.researcher import Researcher
 from app.services.conference_service import get_conference_service
 from app.services.funding_service import get_funding_service
-from app.services.linkedin_service import get_linkedin_service
 from app.services.pubmed_service import get_pubmed_service
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,6 @@ class DataSourceManager:
 
     def __init__(self) -> None:
         self.pubmed_service = get_pubmed_service()
-        self.linkedin_service = get_linkedin_service()
         self.conference_service = get_conference_service()
         self.funding_service    = get_funding_service()
 
@@ -188,7 +186,6 @@ class DataSourceManager:
                     "planned":              _step_for_source(source),
                     "enrichment_available": True,
                     "enrichment_note": (
-                        "LinkedIn URL enrichment is active via LinkedInService "
                         "(Google CSE + DuckDuckGo). LinkedIn as a SEARCH source requires Partner API."
                     ),
                 }

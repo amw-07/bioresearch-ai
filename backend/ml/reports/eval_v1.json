@@ -1,0 +1,94 @@
+{
+  "model_type": "RandomForest",
+  "trained_at": "2026-04-11T05:08:46.354534Z",
+  "n_training_samples": 640,
+  "n_test_samples": 160,
+  "test_accuracy": 0.925,
+  "macro_f1": 0.925,
+  "per_class": {
+    "high": {
+      "precision": 0.9423,
+      "recall": 0.9245,
+      "f1": 0.9333
+    },
+    "medium": {
+      "precision": 0.8909,
+      "recall": 0.9423,
+      "f1": 0.9159
+    },
+    "low": {
+      "precision": 0.9434,
+      "recall": 0.9091,
+      "f1": 0.9259
+    }
+  },
+  "confusion_matrix": [
+    [
+      49,
+      1,
+      3
+    ],
+    [
+      2,
+      50,
+      3
+    ],
+    [
+      1,
+      2,
+      49
+    ]
+  ],
+  "top_10_features": [
+    {
+      "feature": "recency_score",
+      "display_name": "Research Recency",
+      "importance": 0.137583
+    },
+    {
+      "feature": "seniority_score",
+      "display_name": "Seniority Level",
+      "importance": 0.114212
+    },
+    {
+      "feature": "title_relevance",
+      "display_name": "Domain Keyword Coverage",
+      "importance": 0.106867
+    },
+    {
+      "feature": "domain_coverage_score",
+      "display_name": "Biotech Domain Breadth",
+      "importance": 0.096625
+    },
+    {
+      "feature": "nih_award_norm",
+      "display_name": "NIH Funding Level",
+      "importance": 0.0881
+    },
+    {
+      "feature": "h_index_norm",
+      "display_name": "Citation Impact (h-index)",
+      "importance": 0.083311
+    },
+    {
+      "feature": "abstract_relevance_score",
+      "display_name": "Abstract Semantic Relevance",
+      "importance": 0.077363
+    },
+    {
+      "feature": "pub_count_norm",
+      "display_name": "Publication Volume",
+      "importance": 0.07415
+    },
+    {
+      "feature": "contact_confidence",
+      "display_name": "Contact Confidence",
+      "importance": 0.066341
+    },
+    {
+      "feature": "location_hub_score",
+      "display_name": "Research Hub Location",
+      "importance": 0.061714
+    }
+  ]
+}

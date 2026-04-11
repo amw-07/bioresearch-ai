@@ -213,27 +213,6 @@ class DataValidator:
         return True, None
 
     @staticmethod
-    def validate_subscription_tier(tier: str) -> tuple[bool, Optional[str]]:
-        """
-        Validate subscription tier
-
-        Args:
-            tier: Tier name to validate
-
-        Returns:
-            Tuple of (is_valid, error_message)
-        """
-        valid_tiers = ["free", "pro", "team", "enterprise"]
-
-        if not tier:
-            return False, "Subscription tier is required"
-
-        if tier.lower() not in valid_tiers:
-            return False, f"Tier must be one of: {', '.join(valid_tiers)}"
-
-        return True, None
-
-    @staticmethod
     def validate_priority_tier(tier: str) -> tuple[bool, Optional[str]]:
         """
         Validate priority tier

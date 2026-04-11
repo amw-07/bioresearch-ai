@@ -168,7 +168,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
         cache_key,
         {
             "email": user.email,
-            "subscription_tier": user.subscription_tier.value,
             "logged_in_at": datetime.utcnow().isoformat(),
         },
         ttl=settings.REDIS_SESSION_TTL,
