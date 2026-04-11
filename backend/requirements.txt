@@ -217,7 +217,7 @@ httpcore==1.0.9
     #   httpx
 httptools==0.7.1
     # via bioresearch-ai
-httpx==0.26.0
+httpx==0.27.0
     # via
     #   bioresearch-ai
     #   gotrue
