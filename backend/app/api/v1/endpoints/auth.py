@@ -73,7 +73,7 @@ async def register(
         password_hash=get_password_hash(user_data.password),
         full_name=user_data.full_name,
         is_active=True,
-        is_verified=False,  # Requires email verification
+        is_verified=True,   # Auto-verified: portfolio project — no email service configured
     )
 
     db.add(new_user)
