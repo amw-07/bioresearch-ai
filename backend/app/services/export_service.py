@@ -33,7 +33,7 @@ class ExportService:
 
     def __init__(self):
         """Initialize export service"""
-                self._storage = None
+        self._storage = None
 
     @property
     def storage(self):
