@@ -24,7 +24,7 @@ from app.core.security import create_access_token, get_password_hash
 from app.main import app
 from app.models.export import Export, ExportFormat, ExportStatus
 from app.models.search import Search
-from app.models.user import SubscriptionTier, User
+from app.models.user import User
 
 # ============================================================================
 # DATABASE FIXTURES
@@ -100,7 +100,6 @@ async def test_user(db_session: AsyncSession) -> User:
         email="test@example.com",
         password_hash=get_password_hash("TestPass123!"),
         full_name="Test User",
-        subscription_tier=SubscriptionTier.FREE,
         is_active=True,
         is_verified=True,
         is_superuser=False,
@@ -120,7 +119,6 @@ async def pro_user(db_session: AsyncSession) -> User:
         email="pro@example.com",
         password_hash=get_password_hash("ProPass123!"),
         full_name="Pro User",
-        subscription_tier=SubscriptionTier.PRO,
         is_active=True,
         is_verified=True,
     )
@@ -139,7 +137,6 @@ async def admin_user(db_session: AsyncSession) -> User:
         email="admin@example.com",
         password_hash=get_password_hash("AdminPass123!"),
         full_name="Admin User",
-        subscription_tier=SubscriptionTier.ENTERPRISE,
         is_active=True,
         is_verified=True,
         is_superuser=True,

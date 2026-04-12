@@ -245,7 +245,6 @@ class TestGetCurrentUser:
         data = response.json()
         assert data["email"] == test_user.email
         assert data["full_name"] == test_user.full_name
-        assert data["subscription_tier"] == test_user.subscription_tier.value
 
     async def test_get_me_unauthenticated(self, client: AsyncClient):
         """Test getting current user without authentication"""

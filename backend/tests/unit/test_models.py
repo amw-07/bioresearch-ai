@@ -7,7 +7,7 @@ import pytest
 from datetime import datetime, timedelta, timezone
 
 from app.models.lead import Lead
-from app.models.user import User, SubscriptionTier
+from app.models.user import User
 from app.models.pipeline import Pipeline, PipelineStatus, PipelineSchedule
 from app.models.export import Export, ExportStatus, ExportFormat
 
@@ -25,7 +25,6 @@ class TestUserModel:
         )
 
         assert user.email == "test@example.com"
-        assert user.subscription_tier == SubscriptionTier.FREE
 
     def test_get_monthly_lead_limit(self):
         """Test getting monthly lead limit"""
@@ -35,7 +34,6 @@ class TestUserModel:
         pro_user = User(
             email="pro@example.com",
             password_hash="hash",
-            subscription_tier=SubscriptionTier.PRO,
         )
         assert pro_user.get_monthly_lead_limit() == 1000
 
