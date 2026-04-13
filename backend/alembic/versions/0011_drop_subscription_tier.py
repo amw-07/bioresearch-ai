@@ -50,28 +50,21 @@ def upgrade() -> None:
     if not _has_table(bind, "users"):
         return
 
-    for col in COLUMNS_TO_DROP:
-        if _has_column(bind, "users", col):
-            # Drop any check constraints on the column first (subscription_tier enum)
-            if col == "subscription_tier":
-                try:
-                    bind.execute(text(
-                        "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_subscription_tier_check"
-                    ))
-                    bind.execute(text(
-                        "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_subscription_tier_key"
-                    ))
-                    # Drop the enum type if it exists
-                    bind.execute(text(
-                        "DROP TYPE IF EXISTS subscriptiontier CASCADE"
-                    ))
-                except Exception:
-                    pass  # Constraint may not exist — safe to continue
+    # Drop constraints first (safe if they don't exist)
+    for stmt in [
+        "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_subscription_tier_check",
+        "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_subscription_tier_key",
+        "DROP TYPE IF EXISTS subscriptiontier CASCADE",
+    ]:
+        try:
+            bind.execute(text(stmt))
+        except Exception:
+            pass
 
-            op.drop_column("users", col)
-            print(f"[OK] Dropped column users.{col}")
-        else:
-            print(f"[SKIP] Column users.{col} not found — already removed")
+    # Use raw SQL IF EXISTS — bypasses SQLAlchemy inspect caching issues
+    for col in COLUMNS_TO_DROP:
+        bind.execute(text(f"ALTER TABLE users DROP COLUMN IF EXISTS {col}"))
+        print(f"[OK] Dropped (or skipped) users.{col}")
 
 
 def downgrade() -> None:

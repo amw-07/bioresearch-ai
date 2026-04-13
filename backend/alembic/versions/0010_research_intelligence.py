@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import inspect
 
 revision = "0010"
-down_revision = "0005"
+down_revision = "0005_indexes"
 branch_labels = None
 depends_on = None
 
