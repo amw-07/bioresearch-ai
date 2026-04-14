@@ -1,7 +1,7 @@
 export const APP_NAME = 'BioResearch AI'
 export const APP_DESCRIPTION = 'AI-powered biotech research intelligence'
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://bioresearch-ai-backend.onrender.com/api/v1'
 
 export const ROUTES = {
   HOME: '/',
@@ -13,13 +13,6 @@ export const ROUTES = {
   SCORING: '/dashboard/scoring',
   EXPORTS: '/dashboard/exports',
   SETTINGS: '/settings',
-} as const
-
-export const SUBSCRIPTION_TIERS = {
-  FREE: 'free',
-  PRO: 'pro',
-  TEAM: 'team',
-  ENTERPRISE: 'enterprise',
 } as const
 
 export const RESEARCHER_STATUSES = {

@@ -35,7 +35,7 @@ export default function LoginPage() {
           <Microscope className="h-5 w-5 text-[#00d68f]" />
         </div>
         <div>
-          <p className="font-syne font-700 text-white text-base tracking-tight leading-tight">BioLead</p>
+          <p className="font-syne font-700 text-white text-base tracking-tight leading-tight">BioResearch AI</p>
           <p className="font-mono-dm text-[10px] text-zinc-600 uppercase tracking-widest">Intelligence</p>
         </div>
       </div>

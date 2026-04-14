@@ -167,17 +167,14 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """
-    Initialize database
-    Creates all tables defined in models
-
-    NOTE: In production, use Alembic migrations instead
+    Verify database connectivity on startup.
+    Schema is managed exclusively by Alembic migrations in main.py lifespan.
     """
     async with async_engine.begin() as conn:
-        # Import all models here
-        from app.models import export, researcher, search, user
-
-        # Create all tables
-        await conn.run_sync(Base.metadata.create_all)
+        # Register models with SQLAlchemy (needed for relationship resolution)
+        from app.models import export, researcher, search, user  # noqa: F401
+        # Connectivity check only — no create_all
+        await conn.run_sync(lambda _: None)
 
 
 async def close_db() -> None:

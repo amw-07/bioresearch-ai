@@ -27,7 +27,7 @@ export default function Home() {
           <Microscope className="h-4 w-4" /> AI-Powered Research Intelligence
         </div>
         <h1 className="max-w-4xl text-5xl font-bold leading-tight">Discover and rank biotech researchers with explainable AI.</h1>
-        <p className="mt-6 max-w-2xl text-slate-300">BioResearch AI helps teams discover relevant researchers, prioritize contact candidates, and understand ranking rationale.</p>
+        <p className="mt-6 max-w-2xl text-slate-300">BioResearch AI discovers, ranks, and explains biotech researchers from PubMed using four real ML components — semantic search, XGBoost scoring, SHAP explainability, and Claude-powered research intelligence.</p>
         <div className="mt-8 flex gap-4">
           <Link href="/register" className="rounded-lg bg-emerald-400 px-5 py-3 font-semibold text-slate-950 inline-flex items-center gap-2">Get started <ArrowRight className="h-4 w-4" /></Link>
           <Link href="/dashboard" className="rounded-lg border border-slate-700 px-5 py-3">Open dashboard</Link>
