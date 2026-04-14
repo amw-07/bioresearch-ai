@@ -1,17 +1,16 @@
-'use client'
+'use client';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { ArrowLeft, Building, Mail, MapPin, Phone, Linkedin } from 'lucide-react';
 
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { ArrowLeft, Building, Mail, MapPin, Phone, Linkedin } from 'lucide-react'
-
-import { useResearcher } from '@/hooks/use-researchers'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ExportDialog } from '@/components/researchers/export-dialog'
-import { ScoreExplanationCard } from '@/components/charts/ScoreExplanationCard'
-import { ResearcherIntelligenceCard } from '@/components/charts/ResearcherIntelligenceCard'
+import { useResearcher } from '@/hooks/use-researchers';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ExportDialog } from '@/components/researchers/export-dialog';
+import { ScoreExplanationCard } from '@/components/charts/ScoreExplanationCard';
+import { ResearcherIntelligenceCard } from '@/components/charts/ResearcherIntelligenceCard';
 
 const TIER_LABELS: Record<string, 'High' | 'Medium' | 'Low'> = { HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' }
 

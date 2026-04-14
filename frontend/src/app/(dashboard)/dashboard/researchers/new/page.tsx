@@ -1,16 +1,15 @@
-'use client'
-
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { useResearchers } from '@/hooks/use-researchers'
-import { useRouter } from 'next/navigation'
+'use client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useResearchers } from '@/hooks/use-researchers';
+import { useRouter } from 'next/navigation';
 
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),

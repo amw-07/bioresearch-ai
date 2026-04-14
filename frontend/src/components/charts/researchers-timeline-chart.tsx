@@ -1,6 +1,5 @@
-'use client'
-
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+'use client';
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const defaultData = [
   { date: 'Jan', created: 65, indexed: 28 },

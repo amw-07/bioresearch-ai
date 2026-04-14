@@ -1,11 +1,10 @@
-'use client'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import { authService } from '@/lib/api/auth-service'
-import { useAuthStore } from '@/stores/auth-store'
-import { LoginRequest, RegisterRequest } from '@/types/auth'
-import { useToast } from '@/components/ui/use-toast'
+'use client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/lib/api/auth-service';
+import { useAuthStore } from '@/stores/auth-store';
+import { LoginRequest, RegisterRequest } from '@/types/auth';
+import { useToast } from '@/components/ui/use-toast';
 
 const persistSession = (accessToken: string, refreshToken: string) => {
   localStorage.setItem('access_token', accessToken)

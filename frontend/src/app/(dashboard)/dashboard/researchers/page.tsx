@@ -1,17 +1,16 @@
-'use client'
-
-import { useState } from 'react'
-import { useResearchers } from '@/hooks/use-researchers'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { ResearcherFilters } from '@/components/researchers/researcher-filters'
-import { ExportDialog } from '@/components/researchers/export-dialog'
-import { Skeleton } from '@/components/ui/skeleton'
-import { MoreHorizontal, Eye, Edit, Trash, Plus } from 'lucide-react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import Link from 'next/link'
-import { Researcher } from '@/types/researcher'
+'use client';
+import { useState } from 'react';
+import { useResearchers } from '@/hooks/use-researchers';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { ResearcherFilters } from '@/components/researchers/researcher-filters';
+import { ExportDialog } from '@/components/researchers/export-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MoreHorizontal, Eye, Edit, Trash, Plus } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
+import { Researcher } from '@/types/researcher';
 
 const AREA_LABELS: Record<string, string> = {
   toxicology: 'Toxicology',

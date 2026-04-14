@@ -1,5 +1,4 @@
-'use client'
-
+'use client';
 import {
   Bar,
   BarChart,
@@ -9,10 +8,10 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
+} from 'recharts';
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export interface SHAPContribution {
   feature: string

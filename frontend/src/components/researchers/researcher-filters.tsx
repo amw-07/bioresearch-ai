@@ -1,10 +1,9 @@
-'use client'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, X } from 'lucide-react'
-import { useState } from 'react'
+'use client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, X } from 'lucide-react';
+import { useState } from 'react';
 
 export function ResearcherFilters({ onFiltersChange }: { onFiltersChange: (f: any) => void }) {
   const [search, setSearch] = useState('')

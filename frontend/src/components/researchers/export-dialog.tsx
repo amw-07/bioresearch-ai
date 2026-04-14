@@ -1,10 +1,9 @@
-'use client'
+'use client';
+import { useState } from 'react';
+import { Download, Loader2 } from 'lucide-react';
 
-import { useState } from 'react'
-import { Download, Loader2 } from 'lucide-react'
-
-import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { useToast } from '@/components/ui/use-toast'
-import { apiClient } from '@/lib/api/client'
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { apiClient } from '@/lib/api/client';
 
 const FIELDS = [
   { id: 'name', label: 'Name' },

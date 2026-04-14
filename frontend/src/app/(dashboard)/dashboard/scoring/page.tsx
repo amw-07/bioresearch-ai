@@ -1,15 +1,14 @@
-'use client'
+'use client';
+import { useEffect, useMemo, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 
-import { useEffect, useMemo, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ModelMetricsDashboard } from '@/components/charts/ModelMetricsDashboard'
-import { ScoreDistributionChart } from '@/components/charts/score-distribution-chart'
-import { researchersService, ModelMetrics } from '@/lib/api/researchers-service'
-import { useScoring } from '@/hooks/use-scoring'
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ModelMetricsDashboard } from '@/components/charts/ModelMetricsDashboard';
+import { ScoreDistributionChart } from '@/components/charts/score-distribution-chart';
+import { researchersService, ModelMetrics } from '@/lib/api/researchers-service';
+import { useScoring } from '@/hooks/use-scoring';
 
 export default function ScoringPage() {
   const { stats, rescoreAll, isRescoring } = useScoring()
@@ -22,7 +21,7 @@ export default function ScoringPage() {
     const load = async () => {
       setLoadingMetrics(true)
       try {
-        const data = await researchersService.getModelMetrics()
+        const data = await researchersService?.getModelMetrics()
         if (mounted) setMetrics(data)
       } catch {
         if (mounted) setMetrics(null)
@@ -40,10 +39,10 @@ export default function ScoringPage() {
   const distributionData = useMemo(() => {
     const tiers = stats?.tier_distribution || { HIGH: 0, MEDIUM: 0, LOW: 0 }
     return [
-      { range: 'HIGH', count: tiers.HIGH || 0 },
-      { range: 'MEDIUM', count: tiers.MEDIUM || 0 },
-      { range: 'LOW', count: tiers.LOW || 0 },
-    ]
+      { range: 'HIGH', count: tiers?.HIGH || 0 },
+      { range: 'MEDIUM', count: tiers?.MEDIUM || 0 },
+      { range: 'LOW', count: tiers?.LOW || 0 },
+    ];
   }, [stats])
 
   return (

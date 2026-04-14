@@ -1,8 +1,7 @@
-'use client'
-
-import { Sidebar } from './sidebar'
-import { Header } from './header'
-import { usePathname } from 'next/navigation'
+'use client';
+import { Sidebar } from './sidebar';
+import { Header } from './header';
+import { usePathname } from 'next/navigation';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
