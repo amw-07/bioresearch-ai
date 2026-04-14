@@ -8,11 +8,18 @@ export interface SemanticSearchParams {
   n_results?: number
 }
 
+export interface SearchQuota {
+  is_guest: boolean
+  searches_used: number
+  searches_limit: number
+}
+
 export interface SemanticSearchResult {
   query: string
   results_count: number
   researchers: Researcher[]
   message?: string
+  quota?: SearchQuota
 }
 
 export interface ModelMetrics {
