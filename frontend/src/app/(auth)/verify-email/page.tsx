@@ -1,13 +1,12 @@
-'use client'
+'use client';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { ArrowLeft, BarChart3, Check, Loader2, X } from 'lucide-react';
 
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { ArrowLeft, BarChart3, Check, Loader2, X } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { authService } from '@/lib/api/auth-service'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { authService } from '@/lib/api/auth-service';
 
 type VerificationState = 'verifying' | 'success' | 'error'
 

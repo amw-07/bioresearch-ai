@@ -1,9 +1,8 @@
-'use client'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api/client'
-import { CreateResearcherRequest, Researcher, ResearcherFilters } from '@/types/researcher'
-import { useToast } from '@/components/ui/use-toast'
+'use client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import { CreateResearcherRequest, Researcher, ResearcherFilters } from '@/types/researcher';
+import { useToast } from '@/components/ui/use-toast';
 
 const toResearcher = (r: any): Researcher => ({
   ...r,

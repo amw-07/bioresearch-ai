@@ -1,8 +1,7 @@
-'use client'
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ModelMetrics } from '@/lib/api/researchers-service'
+'use client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ModelMetrics } from '@/lib/api/researchers-service';
 
 interface Props {
   metrics: ModelMetrics | null

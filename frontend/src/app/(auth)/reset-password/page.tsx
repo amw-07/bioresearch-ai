@@ -1,18 +1,17 @@
-'use client'
-
+'use client';
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ArrowLeft, Loader2, Microscope, Check, MailCheck } from 'lucide-react'
-import { authService } from '@/lib/api/auth-service'
-import { useToast } from '@/components/ui/use-toast'
+import { useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ArrowLeft, Loader2, Microscope, Check, MailCheck } from 'lucide-react';
+import { authService } from '@/lib/api/auth-service';
+import { useToast } from '@/components/ui/use-toast';
 
 const requestSchema = z.object({ email: z.string().email('Invalid email') })
 const confirmSchema = z
@@ -152,8 +151,7 @@ export default function ResetPasswordPage() {
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
             {isConfirmFlow
-              ? 'Choose a strong new password'
-              : "Enter your email and we'll send instructions"}
+              ? 'Choose a strong new password' : "Enter your email and we'll send instructions"}
           </p>
         </div>
 

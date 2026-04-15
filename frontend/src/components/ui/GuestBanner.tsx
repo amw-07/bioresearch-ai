@@ -1,8 +1,7 @@
-'use client'
-
-import { useState } from 'react'
-import Link from 'next/link'
-import { X, Zap, AlertTriangle } from 'lucide-react'
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { X, Zap, AlertTriangle } from 'lucide-react';
 
 interface Props {
   searchesUsed: number
@@ -24,8 +23,7 @@ export function GuestBanner({ searchesUsed, searchesLimit, isGuest }: Props) {
         isAtLimit
           ? 'border-red-500/30 bg-red-950/30 text-red-300'
           : isNearLimit
-          ? 'border-amber-500/30 bg-amber-950/20 text-amber-300'
-          : 'border-[rgba(0,214,143,0.2)] bg-[rgba(0,214,143,0.05)] text-[#00d68f]'
+          ? 'border-amber-500/30 bg-amber-950/20 text-amber-300' :'border-[rgba(0,214,143,0.2)] bg-[rgba(0,214,143,0.05)] text-[#00d68f]'
       }`}
     >
       <div className="flex items-center gap-3">

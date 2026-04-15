@@ -1,14 +1,13 @@
-'use client'
-
-import Link from 'next/link'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useAuth } from '@/hooks/use-auth'
-import { Loader2, Microscope, Check, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+'use client';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/use-auth';
+import { Loader2, Microscope, Check, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const schema = z
   .object({

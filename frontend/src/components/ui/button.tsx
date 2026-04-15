@@ -1,11 +1,11 @@
-import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
+import * as React from 'react';
+import { Slot } from '@radix-ui/react-slot';
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
-  size?: 'default' | 'sm' | 'lg' | 'icon'
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   asChild?: boolean
 }
 

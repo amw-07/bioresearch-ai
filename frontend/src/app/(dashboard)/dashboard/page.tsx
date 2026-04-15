@@ -1,14 +1,13 @@
-'use client'
-
-import { Skeleton } from '@/components/ui/skeleton'
-import { Users, Target, Microscope, Search } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api/client'
-import { ScoreDistributionChart } from '@/components/charts/score-distribution-chart'
-import { ResearchersTimelineChart } from '@/components/charts/researchers-timeline-chart'
-import { ResearchAreaDonutChart } from '@/components/charts/ResearchAreaDonutChart'
-import { useAuth } from '@/hooks/use-auth'
-import { cn } from '@/lib/utils'
+'use client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Users, Target, Microscope, Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import { ScoreDistributionChart } from '@/components/charts/score-distribution-chart';
+import { ResearchersTimelineChart } from '@/components/charts/researchers-timeline-chart';
+import { ResearchAreaDonutChart } from '@/components/charts/ResearchAreaDonutChart';
+import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 
 interface DashboardStats {
   total_researchers: number

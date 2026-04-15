@@ -1,14 +1,13 @@
-'use client'
-
-import { useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { SemanticSearchBar } from '@/components/charts/SemanticSearchBar'
-import { GuestBanner } from '@/components/ui/GuestBanner'
-import { researchersService, SemanticSearchResult, SearchQuota } from '@/lib/api/researchers-service'
-import { Researcher } from '@/types/researcher'
-import { Eye } from 'lucide-react'
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { SemanticSearchBar } from '@/components/charts/SemanticSearchBar';
+import { GuestBanner } from '@/components/ui/GuestBanner';
+import { researchersService, SemanticSearchResult, SearchQuota } from '@/lib/api/researchers-service';
+import { Researcher } from '@/types/researcher';
+import { Eye } from 'lucide-react';
 
 const AREA_LABELS: Record<string, string> = {
   toxicology: 'Toxicology',

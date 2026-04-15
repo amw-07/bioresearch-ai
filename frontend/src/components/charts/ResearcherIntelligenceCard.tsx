@@ -1,8 +1,7 @@
-'use client'
-
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ResearcherIntelligence } from '@/types/researcher'
+'use client';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ResearcherIntelligence } from '@/types/researcher';
 
 interface Props {
   intelligence?: ResearcherIntelligence | null
