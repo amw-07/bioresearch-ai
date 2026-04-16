@@ -75,14 +75,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "https://bioresearch-ai.vercel.app"
 
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "https://bioresearch-ai.vercel.app",
-    ]
+    BACKEND_CORS_ORIGINS: List[str] = ["https://bioresearch-ai.vercel.app",]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -173,11 +169,6 @@ class Settings(BaseSettings):
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_PER_HOUR: int = 1000
 
-    # Scoring Weights
-    DEFAULT_ROLE_WEIGHT: int = 30
-    DEFAULT_PUBLICATION_WEIGHT: int = 40
-    DEFAULT_FUNDING_WEIGHT: int = 20
-    DEFAULT_LOCATION_WEIGHT: int = 10
 
     # Logging
     LOG_LEVEL: str = "INFO"
