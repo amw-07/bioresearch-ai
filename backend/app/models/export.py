@@ -108,6 +108,11 @@ class Export(Base):
     download_count = Column(Integer, default=0, nullable=False)
 
     # Timestamps
+    completed_at = Column(DateTime(timezone=True), nullable=True,
+        comment="When export finished processing (set by mark_as_completed / mark_as_failed)")
+    expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    downloaded_at = Column(DateTime(timezone=True), nullable=True)
+    download_count = Column(Integer, default=0, nullable=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
     )
