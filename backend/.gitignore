@@ -85,3 +85,4 @@ ml/models/*.joblib
 
 # Training data — generated, not source
 data/training_researchers.csv
+ml/models/*.joblib
