@@ -43,6 +43,8 @@ Architecture decisions documented here for interview-readiness:
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import logging
 import os
 from typing import List, Optional, Tuple
@@ -155,6 +157,14 @@ class EmbeddingService:
         Returns:
             document_id (str) — always equals researcher_id
         """
+        # Invalidate cache for all semantic search queries
+        from app.core.cache import get_async_redis
+        redis = await get_async_redis()
+        keys = await redis.keys("semantic_search:*")
+        if keys:
+            await redis.delete(*keys)
+            logger.info("Invalidated semantic search cache due to new researcher indexing")
+
         # Build domain-prefixed text for embedding
         content_parts = filter(None, [title, abstract])
         content = ". ".join(content_parts)
@@ -219,23 +229,14 @@ class EmbeddingService:
         # theoretically in [-1, 1] but practically in [0, 1] for related texts
         return float(max(0.0, min(1.0, score)))
 
-    async def semantic_search(
+    async def _compute_semantic_search(
         self,
         query: str,
         n_results: int = 20,
         research_area_filter: Optional[str] = None,
     ) -> List[Tuple[str, float]]:
         """
-        Semantic search over ChromaDB. Returns (researcher_id, similarity) pairs
-        sorted by similarity descending.
-
-        Args:
-            query:                 Natural language search query
-            n_results:             Number of results to return
-            research_area_filter:  If set, filter to this research area only
-
-        Returns:
-            List of (researcher_id, similarity_score) tuples
+        Core semantic search logic (unchanged from original).
         """
         prefixed_query = f"{QUERY_PREFIX}{query}"
 
@@ -268,8 +269,44 @@ class EmbeddingService:
         results.sort(key=lambda x: x[1], reverse=True)
         return results
 
+    async def semantic_search(
+        self,
+        query: str,
+        n_results: int = 20,
+        research_area_filter: Optional[str] = None,
+    ) -> List[Tuple[str, float]]:
+        """
+        Semantic search over ChromaDB with Redis caching.
+        Returns (researcher_id, similarity) pairs sorted by similarity descending.
+        """
+        # Generate cache key
+        cache_key = f"semantic_search:{hashlib.md5(query.encode()).hexdigest()}:{research_area_filter or 'all'}"
+
+        # Check cache
+        from app.core.cache import get_async_redis
+        redis = await get_async_redis()
+        cached = await redis.get(cache_key)
+        if cached:
+            logger.info(f"Cache hit for query: {query}")
+            return json.loads(cached)
+
+        logger.info(f"Cache miss for query: {query}")
+        # Compute if not cached
+        results = await self._compute_semantic_search(query, n_results, research_area_filter)
+
+        # Cache result
+        await redis.setex(cache_key, 300, json.dumps(results))  # 5 minutes TTL
+        return results
+
     async def delete_researcher(self, researcher_id: str) -> None:
         """Remove a researcher from the ChromaDB index."""
+        # Invalidate cache for all semantic search queries
+        from app.core.cache import get_async_redis
+        redis = await get_async_redis()
+        keys = await redis.keys("semantic_search:*")
+        if keys:
+            await redis.delete(*keys)
+            logger.info("Invalidated semantic search cache due to researcher deletion")
 
         def _delete():
             collection = _get_collection()
