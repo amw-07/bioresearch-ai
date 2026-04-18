@@ -2,7 +2,15 @@
 Intelligence Service — Component 3 of BioResearch AI.
 
 Generates structured AI research intelligence for each researcher profile
-using the Anthropic Claude API.
+using the Google Gemini 2.0 Flash API (free tier via Google AI Studio).
+
+Free tier limits (as of 2026):
+  - 15 requests per minute
+  - 1 million tokens per minute
+  - 1,500 requests per day
+  - $0 cost — no credit card required
+
+Get your free API key at: https://aistudio.google.com/app/apikey
 """
 
 from __future__ import annotations
@@ -19,10 +27,17 @@ from app.models.researcher import Researcher
 
 logger = logging.getLogger(__name__)
 
+# Cache: 30-day TTL keyed by researcher_id.
+# At 90% cache hit rate effective cost = $0 (free tier is more than sufficient).
 INTELLIGENCE_CACHE_TTL = 60 * 60 * 24 * 30
 INTELLIGENCE_CACHE_PREFIX = "intelligence"
+
+# Only generate intelligence for researchers with relevance_score >= 60.
+# Profiles below 60 are Low tier — LLM quality is lower for borderline profiles.
 MIN_RELEVANCE_FOR_INTELLIGENCE = 60
 
+# Fallback object returned on JSON parse failure or API error.
+# Always return a structured object — the frontend expects a dict, not None.
 INTELLIGENCE_FALLBACK: Dict[str, Any] = {
     "research_summary": "Research summary unavailable.",
     "domain_significance": "",
@@ -33,11 +48,16 @@ INTELLIGENCE_FALLBACK: Dict[str, Any] = {
     "data_gaps": ["Intelligence generation failed — check server logs for details."],
 }
 
-INTELLIGENCE_PROMPT = """You are an expert scientific research analyst specialising in biotech, 
-pharmaceutical, and life sciences research. Analyse the researcher profile below and generate 
+# Gemini model used for intelligence generation.
+# gemini-2.0-flash: free tier, fast, excellent structured JSON output.
+# Upgrade path: gemini-2.5-flash (also free on AI Studio, higher quality).
+GEMINI_MODEL = "gemini-2.0-flash"
+
+INTELLIGENCE_PROMPT = """You are an expert scientific research analyst specialising in biotech, \
+pharmaceutical, and life sciences research. Analyse the researcher profile below and generate \
 structured intelligence about their scientific work and domain significance.
 
-Return ONLY a valid JSON object with exactly these fields. No markdown, no code fences, 
+Return ONLY a valid JSON object with exactly these fields. No markdown, no code fences, \
 no preamble, no explanations outside the JSON:
 
 {{
@@ -54,7 +74,7 @@ Rules:
 - activity_level must be exactly one of: highly_active, moderately_active, emerging
 - key_topics: 3-5 specific scientific topics (e.g. "hepatotoxicity biomarkers", "3D liver organoids")
 - research_area_tags: 2-3 broad domain tags (e.g. "DILI", "Drug Safety", "In Vitro Models")
-- data_gaps: list any missing information that limits the analysis (empty list if profile is complete)
+- data_gaps: list any missing information that limits analysis (empty list if profile is complete)
 - NEVER include sales language, contact suggestions, timing advice, or commercial framing
 - Write for a scientific audience, not a sales team
 
@@ -71,6 +91,7 @@ Recent Publication: {recent_publication}
 
 
 def _build_prompt(researcher: Researcher) -> str:
+    """Build the Gemini prompt from a Researcher model instance."""
     return INTELLIGENCE_PROMPT.format(
         name=researcher.name or "Unknown",
         title=researcher.title or "Not specified",
@@ -84,19 +105,31 @@ def _build_prompt(researcher: Researcher) -> str:
 
 
 def _parse_intelligence_response(raw: str) -> Dict[str, Any]:
+    """
+    Parse the raw LLM response into a validated intelligence dict.
+
+    Gemini with response_mime_type="application/json" returns clean JSON,
+    but this parser handles edge cases (fenced blocks, trailing commas).
+    """
     raw = raw.strip()
+
+    # Strip markdown fences if present
     if raw.startswith("```"):
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
         raw = raw.strip()
 
+    # Extract the outermost JSON object
     match = re.search(r"\{.*\}", raw, re.DOTALL)
     if match:
         raw = match.group(0)
 
+    # Remove trailing commas before } or ] (common LLM quirk)
     raw = re.sub(r",\s*([}\]])", r"\1", raw)
+
     parsed = json.loads(raw)
 
+    # Validate and normalise required fields
     if "activity_level" not in parsed or parsed["activity_level"] not in (
         "highly_active",
         "moderately_active",
@@ -114,26 +147,62 @@ def _parse_intelligence_response(raw: str) -> Dict[str, Any]:
     return parsed
 
 
-def _call_anthropic_api(prompt: str) -> str:
-    import anthropic  # noqa: PLC0415
+def _call_gemini_api(prompt: str) -> str:
+    """
+    Synchronous Gemini API call.
 
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        messages=[{"role": "user", "content": prompt}],
+    Called via asyncio.to_thread() from the async generate() method
+    to avoid blocking the FastAPI event loop.
+
+    Uses response_mime_type="application/json" to instruct Gemini to
+    return only valid JSON — eliminates most parse failures seen with
+    plain text prompts.
+    """
+    import google.generativeai as genai  # noqa: PLC0415
+
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+
+    model = genai.GenerativeModel(
+        model_name=GEMINI_MODEL,
+        generation_config=genai.GenerationConfig(
+            response_mime_type="application/json",
+            temperature=0.2,        # Low temperature for factual, consistent output
+            max_output_tokens=1024,
+        ),
     )
-    return message.content[0].text
+
+    response = model.generate_content(prompt)
+    return response.text
 
 
 class IntelligenceService:
+    """
+    Generates structured research intelligence for researcher profiles
+    using Google Gemini 2.0 Flash (free tier via Google AI Studio).
+
+    Architecture:
+      - Gated by relevance_score >= 60 (Low-tier profiles skipped)
+      - Redis cache with 30-day TTL prevents redundant API calls
+      - asyncio.to_thread() wraps the synchronous Gemini SDK call
+      - Returns INTELLIGENCE_FALLBACK on any error — never raises to caller
+    """
+
     def _is_available(self) -> bool:
-        return bool(settings.ANTHROPIC_API_KEY)
+        """Return True if GEMINI_API_KEY is configured."""
+        return bool(settings.GEMINI_API_KEY)
 
     async def generate(self, researcher: Researcher) -> Optional[Dict[str, Any]]:
+        """
+        Generate or return cached intelligence for a researcher.
+
+        Returns:
+            Structured intelligence dict, or None if:
+            - GEMINI_API_KEY not set (graceful degradation — system runs with 3 components)
+            - relevance_score < 60 (low-tier gate)
+        """
         if not self._is_available():
             logger.debug(
-                "IntelligenceService: ANTHROPIC_API_KEY not set — returning None (graceful degradation)"
+                "IntelligenceService: GEMINI_API_KEY not set — returning None (graceful degradation)"
             )
             return None
 
@@ -147,6 +216,7 @@ class IntelligenceService:
             )
             return None
 
+        # ── Cache read ────────────────────────────────────────────────────────
         cache_key = f"{INTELLIGENCE_CACHE_PREFIX}:{researcher.id}"
         try:
             cached = await Cache.get(cache_key)
@@ -156,13 +226,16 @@ class IntelligenceService:
         except Exception as cache_exc:
             logger.warning("IntelligenceService: cache read failed: %s", cache_exc)
 
+        # ── API call ──────────────────────────────────────────────────────────
         prompt = _build_prompt(researcher)
         raw_response: Optional[str] = None
 
         try:
-            raw_response = await asyncio.to_thread(_call_anthropic_api, prompt)
+            # Run synchronous Gemini SDK in thread pool to avoid event loop blocking.
+            raw_response = await asyncio.to_thread(_call_gemini_api, prompt)
             intelligence = _parse_intelligence_response(raw_response)
 
+            # ── Cache write ───────────────────────────────────────────────────
             try:
                 await Cache.set(cache_key, intelligence, ttl=INTELLIGENCE_CACHE_TTL)
             except Exception as cache_exc:
@@ -184,15 +257,17 @@ class IntelligenceService:
                 raw_response,
             )
             return INTELLIGENCE_FALLBACK
+
         except Exception as exc:
             logger.error(
-                "IntelligenceService: API call failed for %s: %s",
+                "IntelligenceService: Gemini API call failed for %s: %s",
                 researcher.id,
                 exc,
             )
             return INTELLIGENCE_FALLBACK
 
     async def invalidate_cache(self, researcher_id: str) -> None:
+        """Remove cached intelligence (e.g. after profile update)."""
         cache_key = f"{INTELLIGENCE_CACHE_PREFIX}:{researcher_id}"
         try:
             await Cache.delete(cache_key)
@@ -200,10 +275,12 @@ class IntelligenceService:
             logger.warning("IntelligenceService: cache invalidation failed: %s", exc)
 
 
+# Module-level singleton — loaded once at startup, shared across requests.
 _intelligence_service: Optional[IntelligenceService] = None
 
 
 def get_intelligence_service() -> IntelligenceService:
+    """Return the module-level IntelligenceService singleton."""
     global _intelligence_service
     if _intelligence_service is None:
         _intelligence_service = IntelligenceService()
@@ -215,4 +292,5 @@ __all__ = [
     "get_intelligence_service",
     "INTELLIGENCE_FALLBACK",
     "MIN_RELEVANCE_FOR_INTELLIGENCE",
+    "GEMINI_MODEL",
 ]

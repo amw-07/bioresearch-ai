@@ -1,5 +1,10 @@
 """
-Researcher Model - The core entity representing potential customers
+Researcher Model — Core entity for BioResearch AI.
+
+Represents a biotech researcher discovered from PubMed, NIH funding records,
+or conference databases. Stores identity, contact discovery metadata, ML
+relevance scoring (Component 1), semantic embedding metadata (Component 2),
+LLM intelligence output (Component 3), and SHAP feature contributions (Component 4).
 """
 
 import uuid
@@ -15,54 +20,65 @@ from app.core.database import Base
 
 class Researcher(Base):
     """
-    Researcher model representing potential customers
+    Researcher model representing a biotech scientist discovered via PubMed,
+    NIH funding records, or conference data.
 
     Attributes:
         id: Unique researcher identifier
-        user_id: Owner of this researcher (foreign key to users)
+        user_id: Owner of this researcher record (foreign key to users)
         name: Full name of the researcher
-        title: Job title
-        company: Company name
-        location: Personal location (could be remote)
-        company_hq: Company headquarters location
-        email: Contact email
+        title: Academic/professional title (Professor, PI, Research Scientist, etc.)
+        company: Institution or organisation name
+        location: Researcher location
+        company_hq: Institution headquarters location
+
+        email: Contact email (discovered by contact_service)
         phone: Contact phone number
         linkedin_url: LinkedIn profile URL
         twitter_url: Twitter/X profile URL
-        website: Personal or company website
+        website: Personal or institutional website
 
-        relevance_score: Calculated score (0-100)
+        relevance_score: ML-predicted relevance score (0–100) from RandomForest
         rank: Relative ranking among all researchers
-        relevance_tier: HIGH, MEDIUM, or LOW
+        relevance_tier: HIGH, MEDIUM, or LOW (predicted class from ML model)
+        relevance_confidence: Model probability for predicted tier
+        shap_contributions: Top 5 SHAP feature contributions (drives ScoreExplanationCard)
 
-        recent_publication: Whether they published recently
+        abstract_text: Raw PubMed abstract — source for embedding_service
+        abstract_embedding_id: ChromaDB document ID for this researcher
+        abstract_relevance_score: Cosine sim vs default biotech query, stored at
+            enrichment time. Used as ML feature 12 (abstract semantic relevance).
+            NOT the per-query semantic score computed at search time.
+        research_area: Output of research_area_classifier.py
+        domain_coverage_score: Domain keyword coverage across title + abstract (ML feature 11)
+
+        intelligence: Structured JSON from intelligence_service (Gemini 2.0 Flash)
+        intelligence_generated_at: Timestamp for Redis cache invalidation
+
+        contact_confidence: Confidence of contact discovery (0–1)
+
+        recent_publication: Whether published in last 2 years
         publication_year: Most recent publication year
         publication_title: Title of most recent publication
         publication_count: Total number of publications
 
-        company_funding: Funding stage (Seed, Series A, etc.)
-        company_size: Company size category
-        uses_3d_models: Whether they use 3D in-vitro models
-
-        data_sources: JSON array of where data came from
+        data_sources: JSON array of data source identifiers
         enrichment_data: JSON object with enrichment results
         custom_fields: JSON object for user-defined fields
-
         tags: Array of user-defined tags
         notes: Internal notes
-        status: Researcher status (NEW, CONTACTED, QUALIFIED, etc.)
+        status: Profile status (NEW, REVIEWING, NOTED, CONTACTED, ARCHIVED)
 
-        last_contacted_at: When researcher was last contacted
         created_at: When researcher was added
         updated_at: Last update timestamp
     """
 
     __tablename__ = "researchers"
 
-    # Primary Key
+    # ── Primary key ───────────────────────────────────────────────────────────
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
 
-    # Foreign Keys
+    # ── Foreign keys ─────────────────────────────────────────────────────────
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -76,214 +92,163 @@ class Researcher(Base):
         index=True,
     )
 
-    # Basic Information
+    # ── Identity ──────────────────────────────────────────────────────────────
     name = Column(String(255), nullable=False, index=True)
     title = Column(String(255), nullable=True, index=True)
     company = Column(String(255), nullable=True, index=True)
-
-    # Location
     location = Column(String(255), nullable=True)
     company_hq = Column(String(255), nullable=True)
 
-    # Contact Information
+    # ── Contact ───────────────────────────────────────────────────────────────
     email = Column(String(255), nullable=True, index=True)
     phone = Column(String(50), nullable=True)
     linkedin_url = Column(String(500), nullable=True)
     twitter_url = Column(String(500), nullable=True)
     website = Column(String(500), nullable=True)
 
-    # Scoring
-    relevance_score = Column(Integer, nullable=True, index=True)
+    # ── ML Relevance Scoring — Components 1 + 4 ───────────────────────────────
+    relevance_score = Column(Integer, nullable=True, index=True,
+        comment="0–100 score from RandomForest classifier")
     rank = Column(Integer, nullable=True, index=True)
-    relevance_tier = Column(String(20), nullable=True)  # HIGH, MEDIUM, LOW
+    relevance_tier = Column(String(20), nullable=True,
+        comment="HIGH / MEDIUM / LOW — predicted class from ML model")
+    relevance_confidence = Column(Float, nullable=True,
+        comment="Model probability for predicted tier")
+    shap_contributions = Column(JSONB, nullable=True,
+        comment="Top 5 SHAP feature contributions — drives ScoreExplanationCard UI")
 
+    # ── Semantic Embeddings — Component 2 ─────────────────────────────────────
+    abstract_text = Column(Text, nullable=True,
+        comment="Raw PubMed abstract — source for embedding_service")
+    abstract_embedding_id = Column(String(255), nullable=True,
+        comment="ChromaDB document ID for this researcher")
+    abstract_relevance_score = Column(Float, nullable=True,
+        comment=(
+            "Cosine similarity vs default biotech query, stored at enrichment time. "
+            "Used as ML feature 12. NOT the per-query semantic score."
+        ))
 
+    # ── Research Area Classifier — Component 2 dependency ─────────────────────
+    research_area = Column(String(100), nullable=True,
+        comment=(
+            "Output of research_area_classifier.py: "
+            "toxicology / drug_safety / drug_discovery / "
+            "preclinical / organoids / in_vitro / biomarkers / general_biotech"
+        ))
+    domain_coverage_score = Column(Float, nullable=True,
+        comment="Domain keyword coverage across title + abstract — ML feature 11")
 
-    # AI / ML Intelligence fields
-    abstract_text = Column(Text, nullable=True, comment="Raw PubMed abstract for embedding")
-    abstract_embedding_id = Column(String(255), nullable=True, comment="ChromaDB document ID")
-    abstract_relevance_score = Column(Float, nullable=True, comment="Cosine sim vs default biotech query")
-    research_area = Column(String(100), nullable=True, comment="Classifier output")
-    domain_coverage_score = Column(Float, nullable=True, comment="Domain keyword coverage — ML feature 11")
-    relevance_confidence = Column(Float, nullable=True, comment="Model probability for predicted tier")
-    shap_contributions = Column(JSONB, nullable=True, comment="Top 5 SHAP explanations")
-    intelligence = Column(JSONB, nullable=True, comment="LLM research intelligence output")
-    intelligence_generated_at = Column(DateTime(timezone=True), nullable=True)
-    contact_confidence = Column(Float, nullable=True, comment="Contact discovery confidence")
+    # ── LLM Intelligence — Component 3 (Gemini 2.0 Flash) ────────────────────
+    intelligence = Column(JSONB, nullable=True,
+        comment=(
+            "Structured JSON from intelligence_service: "
+            "research_summary, domain_significance, research_connections, "
+            "key_topics, research_area_tags, activity_level, data_gaps"
+        ))
+    intelligence_generated_at = Column(DateTime(timezone=True), nullable=True,
+        comment="Timestamp for Redis cache invalidation")
 
-    # Publication Information
+    # ── Contact discovery ─────────────────────────────────────────────────────
+    contact_confidence = Column(Float, nullable=True,
+        comment="Confidence of contact discovery (0–1)")
+
+    # ── Publication metadata (PubMed) ─────────────────────────────────────────
     recent_publication = Column(Boolean, default=False)
     publication_year = Column(Integer, nullable=True)
     publication_title = Column(Text, nullable=True)
     publication_count = Column(Integer, default=0)
 
-    # Company Information
-    company_funding = Column(String(50), nullable=True)  # Seed, Series A, B, C, Public
-    company_size = Column(String(50), nullable=True)  # 1-10, 11-50, 51-200, etc.
+    # ── Institution ───────────────────────────────────────────────────────────
+    company_funding = Column(String(50), nullable=True)
+    company_size = Column(String(50), nullable=True)
     uses_3d_models = Column(Boolean, default=False)
 
-    # Data Sources & Enrichment
-    data_sources = Column(JSONB, default=list, nullable=False)
-    # Example: ["pubmed", "linkedin", "hunter.io"]
-
+    # ── Enrichment metadata ───────────────────────────────────────────────────
+    data_sources = Column(JSONB, default=list, nullable=False,
+        comment='Array of source identifiers e.g. ["pubmed", "hunter.io"]')
     enrichment_data = Column(JSONB, default=dict, nullable=False)
-    # Example: {
-    #   "email_verified": true,
-    #   "company_data": {...},
-    #   "social_profiles": {...},
-    #   "funding_history": [...]
-    # }
-
-    # Custom Fields (user-defined)
     custom_fields = Column(JSONB, default=dict, nullable=False)
-    # Example: {
-    #   "budget": "$50k",
-    #   "interest_level": "high",
-    #   "decision_maker": true
-    # }
-
-    # Organization
     tags = Column(JSONB, default=list, nullable=False)
-    # Example: ["high-priority", "conference-speaker", "published-author"]
-
     notes = Column(Text, nullable=True)
+    status = Column(String(50), default="NEW", nullable=False, index=True,
+        comment="NEW / REVIEWING / NOTED / CONTACTED / ARCHIVED")
 
-    status = Column(String(50), default="NEW", nullable=False, index=True)
-    # Status values: NEW, REVIEWING, NOTED, CONTACTED, ARCHIVED
-
-    # Timestamps
+    # ── Timestamps ────────────────────────────────────────────────────────────
     last_contacted_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
+    created_at = Column(DateTime(timezone=True), server_default=func.now(),
+                        nullable=False, index=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(),
+                        onupdate=func.now(), nullable=False)
 
-    # Relationships
+    # ── Relationships ─────────────────────────────────────────────────────────
     user = relationship("User", back_populates="researchers", foreign_keys=[user_id])
     assignee = relationship("User", foreign_keys=[assigned_to])
 
-    # Indexes for common queries
-    __table_args__ = (
-        # Composite index for filtering by user and score
-        # Index('ix_researchers_user_score', 'user_id', 'relevance_score'),
-        # Composite index for filtering by user and status
-        # Index('ix_researchers_user_status', 'user_id', 'status'),
-    )
+    __table_args__ = ()
 
     def __repr__(self):
-        return f"<Researcher(id={self.id}, name={self.name}, company={self.company}, score={self.relevance_score})>"
+        return f"<Researcher(id={self.id}, name={self.name}, score={self.relevance_score})>"
 
-    # Helper Methods
+    # ── Helper methods ────────────────────────────────────────────────────────
+
     def get_relevance_tier(self) -> str:
-        """
-        Get priority tier based on relevance score
-        """
+        """Return relevance tier based on current score."""
         if self.relevance_score is None:
             return "UNSCORED"
-
         if self.relevance_score >= 70:
             return "HIGH"
         elif self.relevance_score >= 50:
             return "MEDIUM"
-        else:
-            return "LOW"
+        return "LOW"
 
     def update_relevance_tier(self):
-        """
-        Update the relevance_tier field based on current score
-        """
+        """Sync relevance_tier column with current score."""
         self.relevance_tier = self.get_relevance_tier()
 
     def add_tag(self, tag: str):
-        """
-        Add a tag to the researcher
-        """
         if not self.tags:
             self.tags = []
-
         if tag not in self.tags:
             self.tags.append(tag)
 
     def remove_tag(self, tag: str):
-        """
-        Remove a tag from the researcher
-        """
         if self.tags and tag in self.tags:
             self.tags.remove(tag)
 
     def has_tag(self, tag: str) -> bool:
-        """
-        Check if researcher has a specific tag
-        """
         return tag in (self.tags or [])
 
     def add_data_source(self, source: str):
-        """
-        Add a data source to the researcher
-        """
         if not self.data_sources:
             self.data_sources = []
-
         if source not in self.data_sources:
             self.data_sources.append(source)
 
     def get_enrichment(self, enrichment_type: str):
-        """
-        Get a specific enrichment result
-        """
         return self.enrichment_data.get(enrichment_type)
 
     def set_enrichment(self, enrichment_type: str, data: dict):
-        """
-        Store enrichment data
-        """
         if not self.enrichment_data:
             self.enrichment_data = {}
-
         self.enrichment_data[enrichment_type] = data
 
-    def get_custom_field(self, field_name: str, default=None):
-        """
-        Get a custom field value
-        """
-        return self.custom_fields.get(field_name, default)
-
-    def set_custom_field(self, field_name: str, value):
-        """
-        Set a custom field value
-        """
-        if not self.custom_fields:
-            self.custom_fields = {}
-
-        self.custom_fields[field_name] = value
-
     def to_dict(self) -> dict:
-        """
-        Convert researcher to dictionary (useful for exports)
-        """
+        """Convert researcher to dict (used for CSV exports)."""
         return {
             "id": str(self.id),
             "name": self.name,
             "title": self.title,
             "company": self.company,
             "location": self.location,
-            "company_hq": self.company_hq,
             "email": self.email,
-            "phone": self.phone,
             "linkedin_url": self.linkedin_url,
             "relevance_score": self.relevance_score,
-            "rank": self.rank,
             "relevance_tier": self.relevance_tier,
+            "research_area": self.research_area,
             "recent_publication": self.recent_publication,
             "publication_title": self.publication_title,
             "publication_year": self.publication_year,
-            "company_funding": self.company_funding,
-            "uses_3d_models": self.uses_3d_models,
+            "publication_count": self.publication_count,
             "tags": self.tags,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,

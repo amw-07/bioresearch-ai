@@ -10,18 +10,20 @@ aiosignal==1.4.0
     #   bioresearch-ai
 alembic==1.13.1
     # via bioresearch-ai
+annotated-doc==0.0.4
+    # via typer
 annotated-types==0.7.0
     # via
     #   bioresearch-ai
     #   pydantic
-anthropic>=0.25.0
-    # via bioresearch-ai
 anyio==4.12.0
     # via
     #   bioresearch-ai
     #   httpx
     #   starlette
     #   watchfiles
+asgiref==3.11.1
+    # via opentelemetry-instrumentation-asgi
 astroid==3.0.3
     # via
     #   bioresearch-ai
@@ -44,13 +46,15 @@ babel==2.17.0
     # via
     #   bioresearch-ai
     #   mkdocs-material
+backoff==2.2.1
+    # via posthog
 bcrypt==4.1.2
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   chromadb
 beautifulsoup4==4.12.3
     # via bioresearch-ai
 biopython==1.83
-    # via bioresearch-ai
-chromadb==0.5.3
     # via bioresearch-ai
 black==23.12.1
     # via bioresearch-ai
@@ -62,12 +66,15 @@ brotli==1.2.0
     # via
     #   bioresearch-ai
     #   geventhttpclient
+build==1.4.3
+    # via chromadb
 certifi==2026.1.4
     # via
     #   bioresearch-ai
     #   geventhttpclient
     #   httpcore
     #   httpx
+    #   kubernetes
     #   requests
 cffi==2.0.0
     # via
@@ -79,6 +86,10 @@ charset-normalizer==3.4.4
     # via
     #   bioresearch-ai
     #   requests
+chroma-hnswlib==0.7.3
+    # via chromadb
+chromadb==0.5.3
+    # via bioresearch-ai
 click==8.3.1
     # via
     #   bioresearch-ai
@@ -88,6 +99,7 @@ click==8.3.1
     #   click-repl
     #   flask
     #   mkdocs
+    #   typer
     #   uvicorn
 click-didyoumean==0.3.1
     # via bioresearch-ai
@@ -95,15 +107,20 @@ click-plugins==1.1.1.2
     # via bioresearch-ai
 click-repl==0.3.0
     # via bioresearch-ai
+cloudpickle==3.1.2
+    # via shap
 colorama==0.4.6
     # via
     #   bioresearch-ai
+    #   build
     #   click
     #   ipython
     #   mkdocs
     #   mkdocs-material
     #   pylint
     #   pytest
+    #   tqdm
+    #   uvicorn
 configargparse==1.7.1
     # via
     #   bioresearch-ai
@@ -113,7 +130,15 @@ coverage==7.13.1
     #   bioresearch-ai
     #   pytest-cov
 cryptography==46.0.3
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   google-auth
+cuda-bindings==13.2.0 ; sys_platform == 'linux'
+    # via torch
+cuda-pathfinder==1.5.2 ; sys_platform == 'linux'
+    # via cuda-bindings
+cuda-toolkit==13.0.2 ; sys_platform == 'linux'
+    # via torch
 decorator==5.2.1
     # via
     #   bioresearch-ai
@@ -131,10 +156,14 @@ dill==0.4.0
     # via
     #   bioresearch-ai
     #   pylint
+distro==1.9.0
+    # via posthog
 dnspython==2.8.0
     # via
     #   bioresearch-ai
     #   email-validator
+durationpy==0.10
+    # via kubernetes
 ecdsa==0.19.1
     # via
     #   bioresearch-ai
@@ -152,7 +181,14 @@ executing==2.2.1
 faker==22.0.0
     # via bioresearch-ai
 fastapi==0.109.0
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   chromadb
+filelock==3.25.2
+    # via
+    #   huggingface-hub
+    #   torch
+    #   transformers
 flake8==7.0.0
     # via bioresearch-ai
 flask==3.1.2
@@ -169,11 +205,17 @@ flask-cors==6.0.2
     # via
     #   bioresearch-ai
     #   locust
+flatbuffers==25.12.19
+    # via onnxruntime
 frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
     #   bioresearch-ai
+fsspec==2026.3.0
+    # via
+    #   huggingface-hub
+    #   torch
 gevent==25.9.1
     # via
     #   bioresearch-ai
@@ -187,6 +229,31 @@ ghp-import==2.1.0
     # via
     #   bioresearch-ai
     #   mkdocs
+google-ai-generativelanguage==0.6.15
+    # via google-generativeai
+google-api-core==2.30.3
+    # via
+    #   google-ai-generativelanguage
+    #   google-api-python-client
+    #   google-generativeai
+google-api-python-client==2.194.0
+    # via google-generativeai
+google-auth==2.49.2
+    # via
+    #   google-ai-generativelanguage
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   google-generativeai
+google-auth-httplib2==0.3.1
+    # via google-api-python-client
+google-generativeai==0.8.6
+    # via bioresearch-ai
+googleapis-common-protos==1.74.0
+    # via
+    #   google-api-core
+    #   grpcio-status
+    #   opentelemetry-exporter-otlp-proto-grpc
 gotrue==2.12.4
     # via
     #   bioresearch-ai
@@ -196,6 +263,14 @@ greenlet==3.3.0
     #   bioresearch-ai
     #   gevent
     #   sqlalchemy
+grpcio==1.80.0
+    # via
+    #   chromadb
+    #   google-api-core
+    #   grpcio-status
+    #   opentelemetry-exporter-otlp-proto-grpc
+grpcio-status==1.71.2
+    # via google-api-core
 h11==0.16.0
     # via
     #   bioresearch-ai
@@ -205,6 +280,8 @@ h2==4.3.0
     # via
     #   bioresearch-ai
     #   httpx
+hf-xet==1.4.3 ; platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'
+    # via huggingface-hub
 hiredis==2.3.2
     # via bioresearch-ai
 hpack==4.1.0
@@ -215,16 +292,28 @@ httpcore==1.0.9
     # via
     #   bioresearch-ai
     #   httpx
+httplib2==0.31.2
+    # via
+    #   google-api-python-client
+    #   google-auth-httplib2
 httptools==0.7.1
-    # via bioresearch-ai
-httpx==0.27.0
     # via
     #   bioresearch-ai
+    #   uvicorn
+httpx==0.27.2
+    # via
+    #   bioresearch-ai
+    #   chromadb
     #   gotrue
     #   postgrest
     #   storage3
     #   supabase
     #   supafunc
+huggingface-hub==0.36.2
+    # via
+    #   sentence-transformers
+    #   tokenizers
+    #   transformers
 hyperframe==6.1.0
     # via
     #   bioresearch-ai
@@ -237,6 +326,10 @@ idna==3.11
     #   httpx
     #   requests
     #   yarl
+importlib-metadata==8.7.1
+    # via opentelemetry-api
+importlib-resources==6.5.2
+    # via chromadb
 iniconfig==2.3.0
     # via
     #   bioresearch-ai
@@ -265,10 +358,17 @@ jinja2==3.1.6
     #   flask
     #   mkdocs
     #   mkdocs-material
+    #   torch
+joblib==1.5.3
+    # via scikit-learn
+kubernetes==35.0.0
+    # via chromadb
 limits==5.6.0
     # via
     #   bioresearch-ai
     #   slowapi
+llvmlite==0.47.0
+    # via numba
 locust==2.20.0
     # via bioresearch-ai
 mako==1.3.10
@@ -281,6 +381,8 @@ markdown==3.10
     #   mkdocs
     #   mkdocs-material
     #   pymdown-extensions
+markdown-it-py==4.0.0
+    # via rich
 markupsafe==3.0.3
     # via
     #   bioresearch-ai
@@ -298,6 +400,8 @@ mccabe==0.7.0
     #   bioresearch-ai
     #   flake8
     #   pylint
+mdurl==0.1.2
+    # via markdown-it-py
 mergedeep==1.3.4
     # via
     #   bioresearch-ai
@@ -312,6 +416,10 @@ mkdocs-material-extensions==1.3.1
     # via
     #   bioresearch-ai
     #   mkdocs-material
+mmh3==5.2.1
+    # via chromadb
+mpmath==1.3.0
+    # via sympy
 msgpack==1.1.2
     # via
     #   bioresearch-ai
@@ -328,28 +436,136 @@ mypy-extensions==1.1.0
     #   bioresearch-ai
     #   black
     #   mypy
+networkx==3.6.1
+    # via torch
+numba==0.65.0
+    # via shap
 numpy==1.26.3
     # via
     #   biopython
     #   bioresearch-ai
+    #   chroma-hnswlib
+    #   chromadb
+    #   numba
+    #   onnxruntime
     #   pandas
+    #   scikit-learn
+    #   scipy
+    #   sentence-transformers
+    #   shap
+    #   transformers
+    #   xgboost
+nvidia-cublas==13.1.0.3 ; sys_platform == 'linux'
+    # via
+    #   cuda-toolkit
+    #   nvidia-cudnn-cu13
+    #   nvidia-cusolver
+nvidia-cuda-cupti==13.0.85 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-cuda-nvrtc==13.0.88 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-cuda-runtime==13.0.96 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-cudnn-cu13==9.19.0.56 ; sys_platform == 'linux'
+    # via torch
+nvidia-cufft==12.0.0.61 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-cufile==1.15.1.6 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-curand==10.4.0.35 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-cusolver==12.0.4.66 ; sys_platform == 'linux'
+    # via cuda-toolkit
+nvidia-cusparse==12.6.3.3 ; sys_platform == 'linux'
+    # via
+    #   cuda-toolkit
+    #   nvidia-cusolver
+nvidia-cusparselt-cu13==0.8.0 ; sys_platform == 'linux'
+    # via torch
+nvidia-nccl-cu13==2.28.9 ; sys_platform == 'linux'
+    # via torch
+nvidia-nvjitlink==13.0.88 ; sys_platform == 'linux'
+    # via
+    #   cuda-toolkit
+    #   nvidia-cufft
+    #   nvidia-cusolver
+    #   nvidia-cusparse
+nvidia-nvshmem-cu13==3.4.5 ; sys_platform == 'linux'
+    # via torch
+nvidia-nvtx==13.0.85 ; sys_platform == 'linux'
+    # via cuda-toolkit
+oauthlib==3.3.1
+    # via requests-oauthlib
+onnxruntime==1.24.4
+    # via chromadb
 openpyxl==3.1.2
     # via bioresearch-ai
+opentelemetry-api==1.41.0
+    # via
+    #   chromadb
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-exporter-otlp-proto-common==1.41.0
+    # via opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-exporter-otlp-proto-grpc==1.41.0
+    # via chromadb
+opentelemetry-instrumentation==0.62b0
+    # via
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-asgi==0.62b0
+    # via opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-fastapi==0.62b0
+    # via chromadb
+opentelemetry-proto==1.41.0
+    # via
+    #   opentelemetry-exporter-otlp-proto-common
+    #   opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-sdk==1.41.0
+    # via
+    #   chromadb
+    #   opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-semantic-conventions==0.62b0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+    #   opentelemetry-sdk
+opentelemetry-util-http==0.62b0
+    # via
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+orjson==3.11.8
+    # via chromadb
+overrides==7.7.0
+    # via chromadb
 packaging==24.2
     # via
     #   bioresearch-ai
     #   black
+    #   build
     #   deprecation
+    #   huggingface-hub
     #   limits
     #   mkdocs
+    #   onnxruntime
+    #   opentelemetry-instrumentation
     #   plotly
     #   pytest
+    #   shap
+    #   transformers
 paginate==0.5.7
     # via
     #   bioresearch-ai
     #   mkdocs-material
 pandas==2.1.4
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   shap
 parso==0.8.5
     # via
     #   bioresearch-ai
@@ -367,6 +583,8 @@ pexpect==4.9.0
     #   ipython
 phonenumbers==8.13.27
     # via bioresearch-ai
+pillow==12.2.0
+    # via sentence-transformers
 platformdirs==4.5.1
     # via
     #   bioresearch-ai
@@ -383,6 +601,8 @@ postgrest==0.16.11
     # via
     #   bioresearch-ai
     #   supabase
+posthog==7.11.0
+    # via chromadb
 prompt-toolkit==3.0.52
     # via
     #   bioresearch-ai
@@ -392,6 +612,20 @@ propcache==0.4.1
     # via
     #   bioresearch-ai
     #   yarl
+proto-plus==1.27.2
+    # via
+    #   google-ai-generativelanguage
+    #   google-api-core
+protobuf==5.29.6
+    # via
+    #   google-ai-generativelanguage
+    #   google-api-core
+    #   google-generativeai
+    #   googleapis-common-protos
+    #   grpcio-status
+    #   onnxruntime
+    #   opentelemetry-proto
+    #   proto-plus
 psutil==7.2.1
     # via
     #   bioresearch-ai
@@ -409,8 +643,11 @@ pure-eval==0.2.3
 pyasn1==0.6.1
     # via
     #   bioresearch-ai
+    #   pyasn1-modules
     #   python-jose
     #   rsa
+pyasn1-modules==0.4.2
+    # via google-auth
 pycodestyle==2.11.1
     # via
     #   bioresearch-ai
@@ -422,7 +659,9 @@ pycparser==2.23
 pydantic==2.5.3
     # via
     #   bioresearch-ai
+    #   chromadb
     #   fastapi
+    #   google-generativeai
     #   gotrue
     #   postgrest
     #   pydantic-extra-types
@@ -444,6 +683,7 @@ pygments==2.19.2
     #   bioresearch-ai
     #   ipython
     #   mkdocs-material
+    #   rich
 pyjwt==2.10.1
     # via
     #   bioresearch-ai
@@ -454,6 +694,12 @@ pymdown-extensions==10.20
     # via
     #   bioresearch-ai
     #   mkdocs-material
+pyparsing==3.3.2
+    # via httplib2
+pypika==0.51.1
+    # via chromadb
+pyproject-hooks==1.2.0
+    # via build
 pytest==7.4.4
     # via
     #   bioresearch-ai
@@ -471,13 +717,16 @@ python-dateutil==2.8.2
     #   bioresearch-ai
     #   faker
     #   ghp-import
+    #   kubernetes
     #   pandas
+    #   posthog
     #   realtime
     #   storage3
 python-dotenv==1.0.1
     # via
     #   bioresearch-ai
     #   pydantic-settings
+    #   uvicorn
 python-jose==3.3.0
     # via bioresearch-ai
 python-json-logger==2.0.7
@@ -493,9 +742,14 @@ pywin32==311 ; sys_platform == 'win32'
 pyyaml==6.0.3
     # via
     #   bioresearch-ai
+    #   chromadb
+    #   huggingface-hub
+    #   kubernetes
     #   mkdocs
     #   pymdown-extensions
     #   pyyaml-env-tag
+    #   transformers
+    #   uvicorn
 pyyaml-env-tag==1.1
     # via
     #   bioresearch-ai
@@ -514,14 +768,24 @@ regex==2025.11.3
     # via
     #   bioresearch-ai
     #   mkdocs-material
+    #   transformers
 requests==2.31.0
     # via
     #   bioresearch-ai
+    #   chromadb
+    #   google-api-core
+    #   huggingface-hub
+    #   kubernetes
     #   locust
     #   mkdocs-material
+    #   posthog
+    #   requests-oauthlib
+    #   transformers
     #   upstash-redis
-sentence-transformers==2.7.0
-    # via bioresearch-ai
+requests-oauthlib==2.0.0
+    # via kubernetes
+rich==14.3.4
+    # via typer
 roundrobin==0.0.4
     # via
     #   bioresearch-ai
@@ -530,15 +794,37 @@ rsa==4.9.1
     # via
     #   bioresearch-ai
     #   python-jose
-setuptools==80.9.0
+safetensors==0.7.0
+    # via transformers
+scikit-learn==1.8.0
+    # via
+    #   sentence-transformers
+    #   shap
+scipy==1.16.3
+    # via
+    #   scikit-learn
+    #   sentence-transformers
+    #   shap
+    #   xgboost
+sentence-transformers==2.7.0
     # via bioresearch-ai
+setuptools==80.9.0
+    # via
+    #   bioresearch-ai
+    #   torch
+shap==0.44.1
+    # via bioresearch-ai
+shellingham==1.5.4
+    # via typer
 six==1.17.0
     # via
     #   bioresearch-ai
     #   ecdsa
+    #   kubernetes
+    #   posthog
     #   python-dateutil
-shap==0.44.1
-    # via bioresearch-ai
+slicer==0.0.7
+    # via shap
 slowapi==0.1.9
     # via bioresearch-ai
 sniffio==1.3.1
@@ -575,62 +861,112 @@ supafunc==0.5.1
     # via
     #   bioresearch-ai
     #   supabase
+sympy==1.14.0
+    # via
+    #   onnxruntime
+    #   torch
 tenacity==8.2.3
-    # via plotly
+    # via
+    #   chromadb
+    #   plotly
+threadpoolctl==3.6.0
+    # via scikit-learn
+tokenizers==0.22.2
+    # via
+    #   chromadb
+    #   transformers
 tomli==2.4.1 ; python_full_version <= '3.11'
     # via coverage
 tomlkit==0.13.3
     # via
     #   bioresearch-ai
     #   pylint
+torch==2.11.0
+    # via sentence-transformers
+tqdm==4.67.3
+    # via
+    #   chromadb
+    #   google-generativeai
+    #   huggingface-hub
+    #   sentence-transformers
+    #   shap
+    #   transformers
 traitlets==5.14.3
     # via
     #   bioresearch-ai
     #   ipython
     #   matplotlib-inline
+transformers==4.57.6
+    # via sentence-transformers
+triton==3.6.0 ; sys_platform == 'linux'
+    # via torch
+typer==0.24.1
+    # via chromadb
 typing-extensions==4.15.0
     # via
     #   aiosignal
     #   alembic
     #   anyio
     #   bioresearch-ai
+    #   chromadb
     #   fastapi
+    #   google-generativeai
+    #   grpcio
+    #   huggingface-hub
     #   limits
     #   mypy
+    #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+    #   posthog
     #   pydantic
     #   pydantic-core
     #   realtime
     #   sqlalchemy
     #   storage3
+    #   torch
 tzdata==2025.3
     # via
     #   bioresearch-ai
     #   pandas
 upstash-redis==0.15.0
     # via bioresearch-ai
+uritemplate==4.2.0
+    # via google-api-python-client
 urllib3==2.6.2
     # via
     #   bioresearch-ai
     #   geventhttpclient
+    #   kubernetes
     #   requests
 uvicorn==0.27.0
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   chromadb
 uvloop==0.22.1 ; sys_platform != 'win32'
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   uvicorn
 watchdog==3.0.0
     # via
     #   bioresearch-ai
     #   mkdocs
 watchfiles==1.1.1
-    # via bioresearch-ai
+    # via
+    #   bioresearch-ai
+    #   uvicorn
 wcwidth==0.2.14
     # via
     #   bioresearch-ai
     #   prompt-toolkit
+websocket-client==1.9.0
+    # via kubernetes
 websockets==12.0
     # via
     #   bioresearch-ai
     #   realtime
+    #   uvicorn
 werkzeug==3.1.4
     # via
     #   bioresearch-ai
@@ -641,14 +977,17 @@ wrapt==2.0.1
     # via
     #   bioresearch-ai
     #   deprecated
-xlsxwriter==3.1.9
-    # via bioresearch-ai
+    #   opentelemetry-instrumentation
 xgboost==2.0.3
+    # via bioresearch-ai
+xlsxwriter==3.1.9
     # via bioresearch-ai
 yarl==1.22.0
     # via
     #   aiohttp
     #   bioresearch-ai
+zipp==3.23.0
+    # via importlib-metadata
 zope-event==6.1
     # via
     #   bioresearch-ai
@@ -657,4 +996,3 @@ zope-interface==8.1.1
     # via
     #   bioresearch-ai
     #   gevent
-gunicorn==22.0.0
