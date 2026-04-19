@@ -3,6 +3,7 @@ FastAPI Application
 BioResearch AI — Main API entry point
 """
 
+import asyncio
 import logging
 import os
 import time
@@ -102,52 +103,77 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Superuser creation failed: {e}")
         # Not critical, log and continue
 
-    # ── Step 5: Seed demo data (only if SEED_ON_STARTUP=true) ─────────────────
-    if settings.SEED_ON_STARTUP:
-        logger.info("SEED_ON_STARTUP=true — seeding demo researchers...")
-        try:
-            import subprocess
-            result = subprocess.run(
-                ["python", "scripts/seed_demo_data.py"],
-                capture_output=True,
-                text=True,
-                cwd="/app",
-            )
-            if result.returncode != 0:
-                logger.error(f"❌ Seed failed:\n{result.stderr}")
-                raise RuntimeError("Seed failed")
-            logger.info("✅ Demo seed complete")
-        except Exception as e:
-            logger.error(f"❌ Could not run seed script: {e}")
-            raise
-    else:
-        logger.info("SEED_ON_STARTUP=false — skipping demo seed")
+    # ── Step 5: Seed demo data (fire-and-forget background task) ──────────────
+    # NOTE: Seed runs after startup so the app can become ready quickly on Render.
+    seed_on_startup = settings.SEED_ON_STARTUP
 
     # ── Step 6: Check ML Model ────────────────────────────────────────────────
     try:
         from app.services.scoring_service import get_scoring_service
+
         service = get_scoring_service()
         if not service._model_loaded:
-            logger.error("❌ ML model not loaded")
-            raise RuntimeError("ML model not loaded")
-        logger.info(f"✅ ML model loaded ({service._model_type})")
+            logger.error(
+                "❌ ML model not loaded — scorer_v1.joblib missing. "
+                "Check Dockerfile RUN python ml/train_scorer.py completed."
+            )
+            # Non-fatal: server starts but scoring will be degraded.
+        else:
+            logger.info(f"✅ ML model loaded ({service._model_type})")
     except Exception as e:
         logger.error(f"❌ ML model check failed: {e}")
-        raise
+        # Non-fatal — do not raise, server starts degraded
 
     # ── Step 7: Check ChromaDB ────────────────────────────────────────────────
     try:
         from app.services.embedding_service import get_embedding_service
+
         service = get_embedding_service()
         count = service.get_index_count()
         if count == 0:
-            logger.warning("⚠️ ChromaDB is empty — no researchers indexed")
-        logger.info(f"✅ ChromaDB OK ({count} researchers indexed)")
+            logger.warning(
+                "⚠️ ChromaDB is empty — researchers not yet indexed. "
+                "Run seed or enrich researchers to populate the vector index."
+            )
+        else:
+            logger.info(f"✅ ChromaDB OK ({count} researchers indexed)")
     except Exception as e:
-        logger.error(f"❌ ChromaDB check failed: {e}")
-        raise
+        logger.warning(f"⚠️ ChromaDB check failed (non-fatal): {e}")
+        # ChromaDB initialises lazily — not fatal on cold start
 
     logger.info("🚀 BioResearch AI is ready!")
+
+    # ── Background seed (non-blocking startup) ────────────────────────────────
+    if seed_on_startup:
+
+        async def _run_seed():
+            logger.info("🌱 Background seed starting...")
+            try:
+                import subprocess
+
+                result = await asyncio.to_thread(
+                    subprocess.run,
+                    ["python", "scripts/seed_demo_data.py"],
+                    capture_output=True,
+                    text=True,
+                    cwd="/app",
+                    timeout=900,
+                )
+                if result.returncode != 0:
+                    logger.error(f"❌ Seed failed:\n{result.stderr}")
+                else:
+                    logger.info("✅ Background seed complete")
+                    if result.stdout:
+                        tail = result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout
+                        logger.info(tail)
+            except Exception as e:
+                logger.error(f"❌ Background seed error: {e}")
+
+        asyncio.create_task(_run_seed())
+        logger.info("🌱 Seed task scheduled (runs in background)")
+    else:
+        logger.info("⏭️  SEED_ON_STARTUP=false — skipping seed")
+
     yield
 
     # ── Shutdown ───────────────────────────────────────────────────────────────
