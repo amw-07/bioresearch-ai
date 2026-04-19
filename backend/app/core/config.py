@@ -138,9 +138,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
 
     # Gemini model identifier.
-    # gemini-2.0-flash — free, fast, excellent structured JSON output.
+    # gemini-3-flash-preview — free, fast, excellent structured JSON output.
     # gemini-2.5-flash — upgrade path (also free on AI Studio).
-    GEMINI_MODEL: str = "gemini-2.0-flash"
+    GEMINI_MODEL: str = "gemini-3-flash-preview"
 
     # ── Deployment control ────────────────────────────────────────────────────
     # Set SEED_ON_STARTUP=true in Render env vars on first deploy only.

@@ -11,8 +11,10 @@ services:
         sync: false
       - key: REDIS_URL
         sync: false
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: "gemini-3-flash-preview"
       - key: SECRET_KEY
         sync: false
       - key: PUBMED_EMAIL

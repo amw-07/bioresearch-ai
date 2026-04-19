@@ -19,6 +19,7 @@ annotated-types==0.7.0
 anyio==4.12.0
     # via
     #   bioresearch-ai
+    #   google-genai
     #   httpx
     #   starlette
     #   watchfiles
@@ -68,6 +69,8 @@ brotli==1.2.0
     #   geventhttpclient
 build==1.4.3
     # via chromadb
+cachetools==6.2.6
+    # via pyiceberg
 certifi==2026.1.4
     # via
     #   bioresearch-ai
@@ -99,6 +102,7 @@ click==8.3.1
     #   click-repl
     #   flask
     #   mkdocs
+    #   pyiceberg
     #   typer
     #   uvicorn
 click-didyoumean==0.3.1
@@ -133,9 +137,10 @@ cryptography==46.0.3
     # via
     #   bioresearch-ai
     #   google-auth
+    #   pyjwt
 cuda-bindings==13.2.0 ; sys_platform == 'linux'
     # via torch
-cuda-pathfinder==1.5.2 ; sys_platform == 'linux'
+cuda-pathfinder==1.5.3 ; sys_platform == 'linux'
     # via cuda-bindings
 cuda-toolkit==13.0.2 ; sys_platform == 'linux'
     # via torch
@@ -152,12 +157,15 @@ deprecation==2.1.0
     # via
     #   bioresearch-ai
     #   postgrest
+    #   storage3
 dill==0.4.0
     # via
     #   bioresearch-ai
     #   pylint
 distro==1.9.0
-    # via posthog
+    # via
+    #   google-genai
+    #   posthog
 dnspython==2.8.0
     # via
     #   bioresearch-ai
@@ -184,7 +192,7 @@ fastapi==0.109.0
     # via
     #   bioresearch-ai
     #   chromadb
-filelock==3.25.2
+filelock==3.28.0
     # via
     #   huggingface-hub
     #   torch
@@ -215,6 +223,7 @@ frozenlist==1.8.0
 fsspec==2026.3.0
     # via
     #   huggingface-hub
+    #   pyiceberg
     #   torch
 gevent==25.9.1
     # via
@@ -229,35 +238,14 @@ ghp-import==2.1.0
     # via
     #   bioresearch-ai
     #   mkdocs
-google-ai-generativelanguage==0.6.15
-    # via google-generativeai
-google-api-core==2.30.3
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-python-client
-    #   google-generativeai
-google-api-python-client==2.194.0
-    # via google-generativeai
 google-auth==2.49.2
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-core
-    #   google-api-python-client
-    #   google-auth-httplib2
-    #   google-generativeai
-google-auth-httplib2==0.3.1
-    # via google-api-python-client
-google-generativeai==0.8.6
+    # via google-genai
+google-genai==1.73.1
     # via bioresearch-ai
 googleapis-common-protos==1.74.0
-    # via
-    #   google-api-core
-    #   grpcio-status
-    #   opentelemetry-exporter-otlp-proto-grpc
+    # via opentelemetry-exporter-otlp-proto-grpc
 gotrue==2.12.4
-    # via
-    #   bioresearch-ai
-    #   supabase
+    # via bioresearch-ai
 greenlet==3.3.0
     # via
     #   bioresearch-ai
@@ -266,11 +254,7 @@ greenlet==3.3.0
 grpcio==1.80.0
     # via
     #   chromadb
-    #   google-api-core
-    #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
-grpcio-status==1.71.2
-    # via google-api-core
 h11==0.16.0
     # via
     #   bioresearch-ai
@@ -292,22 +276,21 @@ httpcore==1.0.9
     # via
     #   bioresearch-ai
     #   httpx
-httplib2==0.31.2
-    # via
-    #   google-api-python-client
-    #   google-auth-httplib2
 httptools==0.7.1
     # via
     #   bioresearch-ai
     #   uvicorn
-httpx==0.27.2
+httpx==0.28.1
     # via
     #   bioresearch-ai
     #   chromadb
+    #   google-genai
     #   gotrue
     #   postgrest
     #   storage3
     #   supabase
+    #   supabase-auth
+    #   supabase-functions
     #   supafunc
 huggingface-hub==0.36.2
     # via
@@ -328,7 +311,7 @@ idna==3.11
     #   yarl
 importlib-metadata==8.7.1
     # via opentelemetry-api
-importlib-resources==6.5.2
+importlib-resources==7.1.0
     # via chromadb
 iniconfig==2.3.0
     # via
@@ -417,7 +400,9 @@ mkdocs-material-extensions==1.3.1
     #   bioresearch-ai
     #   mkdocs-material
 mmh3==5.2.1
-    # via chromadb
+    # via
+    #   chromadb
+    #   pyiceberg
 mpmath==1.3.0
     # via sympy
 msgpack==1.1.2
@@ -597,11 +582,11 @@ pluggy==1.6.0
     # via
     #   bioresearch-ai
     #   pytest
-postgrest==0.16.11
+postgrest==2.28.3
     # via
     #   bioresearch-ai
     #   supabase
-posthog==7.11.0
+posthog==7.12.0
     # via chromadb
 prompt-toolkit==3.0.52
     # via
@@ -612,20 +597,11 @@ propcache==0.4.1
     # via
     #   bioresearch-ai
     #   yarl
-proto-plus==1.27.2
+protobuf==6.33.6
     # via
-    #   google-ai-generativelanguage
-    #   google-api-core
-protobuf==5.29.6
-    # via
-    #   google-ai-generativelanguage
-    #   google-api-core
-    #   google-generativeai
     #   googleapis-common-protos
-    #   grpcio-status
     #   onnxruntime
     #   opentelemetry-proto
-    #   proto-plus
 psutil==7.2.1
     # via
     #   bioresearch-ai
@@ -656,17 +632,21 @@ pycparser==2.23
     # via
     #   bioresearch-ai
     #   cffi
-pydantic==2.5.3
+pydantic==2.13.2
     # via
     #   bioresearch-ai
     #   chromadb
     #   fastapi
-    #   google-generativeai
+    #   google-genai
     #   gotrue
     #   postgrest
     #   pydantic-extra-types
     #   pydantic-settings
-pydantic-core==2.14.6
+    #   pyiceberg
+    #   realtime
+    #   storage3
+    #   supabase-auth
+pydantic-core==2.46.2
     # via
     #   bioresearch-ai
     #   pydantic
@@ -684,10 +664,13 @@ pygments==2.19.2
     #   ipython
     #   mkdocs-material
     #   rich
+pyiceberg==0.11.1
+    # via storage3
 pyjwt==2.10.1
     # via
     #   bioresearch-ai
     #   gotrue
+    #   supabase-auth
 pylint==3.0.3
     # via bioresearch-ai
 pymdown-extensions==10.20
@@ -695,11 +678,13 @@ pymdown-extensions==10.20
     #   bioresearch-ai
     #   mkdocs-material
 pyparsing==3.3.2
-    # via httplib2
+    # via pyiceberg
 pypika==0.51.1
     # via chromadb
 pyproject-hooks==1.2.0
     # via build
+pyroaring==1.0.4
+    # via pyiceberg
 pytest==7.4.4
     # via
     #   bioresearch-ai
@@ -720,8 +705,7 @@ python-dateutil==2.8.2
     #   kubernetes
     #   pandas
     #   posthog
-    #   realtime
-    #   storage3
+    #   strictyaml
 python-dotenv==1.0.1
     # via
     #   bioresearch-ai
@@ -758,7 +742,7 @@ pyzmq==27.1.0
     # via
     #   bioresearch-ai
     #   locust
-realtime==1.0.6
+realtime==2.28.3
     # via
     #   bioresearch-ai
     #   supabase
@@ -773,19 +757,23 @@ requests==2.31.0
     # via
     #   bioresearch-ai
     #   chromadb
-    #   google-api-core
+    #   google-auth
+    #   google-genai
     #   huggingface-hub
     #   kubernetes
     #   locust
     #   mkdocs-material
     #   posthog
+    #   pyiceberg
     #   requests-oauthlib
     #   transformers
     #   upstash-redis
 requests-oauthlib==2.0.0
     # via kubernetes
 rich==14.3.4
-    # via typer
+    # via
+    #   pyiceberg
+    #   typer
 roundrobin==0.0.4
     # via
     #   bioresearch-ai
@@ -830,7 +818,7 @@ slowapi==0.1.9
 sniffio==1.3.1
     # via
     #   bioresearch-ai
-    #   httpx
+    #   google-genai
 soupsieve==2.8.1
     # via
     #   beautifulsoup4
@@ -847,28 +835,35 @@ starlette==0.35.1
     # via
     #   bioresearch-ai
     #   fastapi
-storage3==0.7.7
+storage3==2.28.3
     # via
     #   bioresearch-ai
     #   supabase
 strenum==0.4.15
     # via
     #   bioresearch-ai
-    #   postgrest
-supabase==2.6.0
+    #   supabase-functions
+    #   supafunc
+strictyaml==1.7.3
+    # via pyiceberg
+supabase==2.28.3
     # via bioresearch-ai
-supafunc==0.5.1
-    # via
-    #   bioresearch-ai
-    #   supabase
+supabase-auth==2.28.3
+    # via supabase
+supabase-functions==2.28.3
+    # via supabase
+supafunc==0.10.2
+    # via bioresearch-ai
 sympy==1.14.0
     # via
     #   onnxruntime
     #   torch
-tenacity==8.2.3
+tenacity==9.1.4
     # via
     #   chromadb
+    #   google-genai
     #   plotly
+    #   pyiceberg
 threadpoolctl==3.6.0
     # via scikit-learn
 tokenizers==0.22.2
@@ -886,7 +881,6 @@ torch==2.11.0
 tqdm==4.67.3
     # via
     #   chromadb
-    #   google-generativeai
     #   huggingface-hub
     #   sentence-transformers
     #   shap
@@ -910,7 +904,7 @@ typing-extensions==4.15.0
     #   bioresearch-ai
     #   chromadb
     #   fastapi
-    #   google-generativeai
+    #   google-genai
     #   grpcio
     #   huggingface-hub
     #   limits
@@ -924,16 +918,16 @@ typing-extensions==4.15.0
     #   pydantic-core
     #   realtime
     #   sqlalchemy
-    #   storage3
     #   torch
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via pydantic
 tzdata==2025.3
     # via
     #   bioresearch-ai
     #   pandas
 upstash-redis==0.15.0
     # via bioresearch-ai
-uritemplate==4.2.0
-    # via google-api-python-client
 urllib3==2.6.2
     # via
     #   bioresearch-ai
@@ -962,9 +956,10 @@ wcwidth==0.2.14
     #   prompt-toolkit
 websocket-client==1.9.0
     # via kubernetes
-websockets==12.0
+websockets==14.1
     # via
     #   bioresearch-ai
+    #   google-genai
     #   realtime
     #   uvicorn
 werkzeug==3.1.4
@@ -986,7 +981,11 @@ yarl==1.22.0
     # via
     #   aiohttp
     #   bioresearch-ai
-zipp==3.23.0
+    #   postgrest
+    #   storage3
+    #   supabase
+    #   supabase-functions
+zipp==3.23.1
     # via importlib-metadata
 zope-event==6.1
     # via
@@ -996,3 +995,5 @@ zope-interface==8.1.1
     # via
     #   bioresearch-ai
     #   gevent
+zstandard==0.25.0
+    # via pyiceberg
