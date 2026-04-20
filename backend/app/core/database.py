@@ -33,7 +33,7 @@ ASYNC_CONNECT_ARGS = {
     "timeout": 10,
     "command_timeout": 30,
     "server_settings": {
-        "application_name": "biotech_lead_generator",
+        "application_name": "bioresearch_ai",
         "timezone": "UTC",
     },
 }
