@@ -58,6 +58,7 @@ async def lifespan(app: FastAPI):
     if os.environ.get("RENDER"):
         try:
             import subprocess
+
             result = subprocess.run(
                 ["python", "-m", "alembic", "upgrade", "head"],
                 capture_output=True,
@@ -66,7 +67,29 @@ async def lifespan(app: FastAPI):
             )
             if result.returncode != 0:
                 logger.error(f"❌ Alembic migration failed:\n{result.stderr}")
-                raise RuntimeError("Alembic migration failed")
+                logger.info("Stamping Alembic head and retrying upgrade...")
+                # Try stamping the DB to the current head and run upgrade again
+                stamp = subprocess.run(
+                    ["python", "-m", "alembic", "stamp", "head"],
+                    capture_output=True,
+                    text=True,
+                    cwd="/app",
+                )
+                if stamp.returncode != 0:
+                    logger.error(f"❌ Alembic stamp failed:\n{stamp.stderr}")
+                    raise RuntimeError("Alembic stamp failed")
+
+                # Retry upgrade after stamping
+                retry = subprocess.run(
+                    ["python", "-m", "alembic", "upgrade", "head"],
+                    capture_output=True,
+                    text=True,
+                    cwd="/app",
+                )
+                if retry.returncode != 0:
+                    logger.error(f"❌ Alembic migration failed after stamp:\n{retry.stderr}")
+                    raise RuntimeError("Alembic migration failed after stamp")
+
             logger.info("✅ Alembic migrations applied")
         except Exception as e:
             logger.error(f"❌ Could not run migrations: {e}")
