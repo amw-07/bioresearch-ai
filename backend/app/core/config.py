@@ -200,6 +200,19 @@ def get_database_url(force_ipv4: bool = None) -> str:
 
     url = settings.DATABASE_URL
 
+    # Guard: if DATABASE_URL is not set, return a harmless placeholder
+    # and emit a warning so imports don't crash with AttributeError.
+    if not url:
+        import warnings
+
+        warnings.warn(
+            "DATABASE_URL is not set. Database connections will fail. "
+            "Set DATABASE_URL in your environment or Render Dashboard.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return "postgresql+psycopg2://localhost/bioresearch_placeholder"
+
     if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
     elif url.startswith("postgresql+asyncpg://"):

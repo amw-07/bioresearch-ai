@@ -42,43 +42,98 @@ ASYNC_CONNECT_ARGS = {
 # ============================================================================
 # SYNC DATABASE (for Alembic migrations)
 # ============================================================================
-
-# Get database URL with IPv4 enforcement
-sync_db_url = get_database_url(force_ipv4=True)
-
-# Create sync engine
-sync_engine = create_engine(
-    sync_db_url,
-    poolclass=QueuePool,
-    pool_size=5,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=settings.DEBUG,
-    connect_args=SYNC_CONNECT_ARGS,
-)
+_sync_engine = None
+_async_engine = None
+_sync_session_factory = None
+_async_session_factory_instance = None
 
 
-# Add connection event listeners
-@event.listens_for(sync_engine, "connect")
-def receive_connect(dbapi_conn, connection_record):
-    """Set connection parameters on connect"""
-    pass  # Connection args handle this
+def _get_sync_engine():
+    """Get or create the synchronous SQLAlchemy engine (used by Alembic)."""
+    global _sync_engine
+    if _sync_engine is None:
+        from app.core.config import get_database_url, settings
+
+        sync_db_url = get_database_url(force_ipv4=True)
+        _sync_engine = create_engine(
+            sync_db_url,
+            poolclass=QueuePool,
+            pool_size=5,
+            max_overflow=10,
+            pool_timeout=30,
+            pool_pre_ping=True,
+            pool_recycle=3600,
+            echo=settings.DEBUG,
+            connect_args=SYNC_CONNECT_ARGS,
+        )
+    return _sync_engine
 
 
-@event.listens_for(sync_engine, "checkout")
-def receive_checkout(dbapi_connection, connection_record, connection_proxy):
-    """Verify connection is alive on checkout"""
-    pass  # pool_pre_ping handles this
+def _get_async_engine():
+    """Get or create the async SQLAlchemy engine (used by FastAPI)."""
+    global _async_engine
+    if _async_engine is None:
+        from app.core.config import get_async_database_url, settings
+
+        async_db_url = get_async_database_url()
+        kwargs = {
+            "pool_pre_ping": True,
+            "pool_recycle": 3600,
+            "echo": settings.DEBUG,
+            "connect_args": ASYNC_CONNECT_ARGS,
+        }
+        if settings.DEBUG:
+            kwargs["poolclass"] = NullPool
+        else:
+            kwargs.update({"pool_size": 10, "max_overflow": 20, "pool_timeout": 30})
+        _async_engine = create_async_engine(async_db_url, **kwargs)
+    return _async_engine
 
 
-# Create sync session factory
-SyncSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=sync_engine,
-)
+# Public aliases — these are safe to import; engines only created on first call
+def get_sync_engine():
+    return _get_sync_engine()
+
+
+def get_async_engine_instance():
+    return _get_async_engine()
+
+
+# Session factories (lazy)
+def _get_sync_session_factory():
+    global _sync_session_factory
+    if _sync_session_factory is None:
+        _sync_session_factory = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=_get_sync_engine(),
+        )
+    return _sync_session_factory
+
+
+def SyncSessionLocal(*args, **kwargs):
+    """Return a synchronous Session instance (callable for compatibility)."""
+    return _get_sync_session_factory()(*args, **kwargs)
+
+
+def get_async_session_factory():
+    global _async_session_factory_instance
+    if _async_session_factory_instance is None:
+        _async_session_factory_instance = async_sessionmaker(
+            _get_async_engine(),
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+    return _async_session_factory_instance
+
+
+def async_session_factory(*args, **kwargs):
+    """Return an AsyncSession instance (callable for compatibility)."""
+    return get_async_session_factory()(*args, **kwargs)
+
+
+# Backward-compatible aliases
+AsyncSessionLocal = lambda *a, **k: get_async_session_factory()(*a, **k)
 
 
 def get_db() -> Generator[Session, None, None]:
