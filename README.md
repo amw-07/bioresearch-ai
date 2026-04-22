@@ -1,6 +1,6 @@
 # BioResearch AI
 
-**Live demo:** https://bioresearch-ai.vercel.app  
+**Live demo:** https://bioresearch-ai.netlify.app  
 **API docs:** https://bioresearch-ai-backend.onrender.com/docs  
 **GitHub:** https://github.com/Irfhan-04/bioresearch-ai  
 
@@ -18,10 +18,10 @@
 | Embeddings | `sentence-transformers/all-MiniLM-L6-v2` | Local, zero API cost |
 | Vector DB | ChromaDB `PersistentClient` | Embedded in FastAPI process |
 | LLM Intelligence | Gemini 2.0 Flash | Free tier · 1,500 req/day · $0 |
-| Frontend | Next.js 14 · TypeScript · Tailwind CSS | Vercel deployment |
+| Frontend | Next.js 14 · TypeScript · Tailwind CSS | Netlify deployment |
 | Database | PostgreSQL (Supabase) | Single `researchers` table |
 | Cache | Redis (Upstash) | 30-day LLM intelligence TTL |
-| Deployment | Render.com (backend) · Vercel (frontend) | Free tier both |
+| Deployment | Render.com (backend) · Netlify (frontend) | Free tier both |
 | Dev environment | GitHub Codespaces | `.devcontainer/` included |
 
 ---
@@ -483,10 +483,10 @@ SEED_ON_STARTUP  → true (first deploy only, then set false)
 
 After the first deploy succeeds: set `SEED_ON_STARTUP=false` to prevent re-seeding on every restart.
 
-**Frontend (Vercel):**
+**Frontend (Netlify):**
 
-Connect the GitHub repo to Vercel with root directory set to `frontend`.  
-Set: `NEXT_PUBLIC_API_URL=https://bioresearch-ai-backend.onrender.com`
+Connect the GitHub repo to Netlify at app.netlify.com — set base directory to `frontend`, build command to `npm run build`, publish directory to `.next`.  
+Set env var: `NEXT_PUBLIC_API_URL=https://bioresearch-ai-backend.onrender.com`
 
 ---
 

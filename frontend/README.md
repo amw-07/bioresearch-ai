@@ -160,13 +160,17 @@ npm run type-check     # Type check with TypeScript
 
 ## 🚀 Deployment Options
 
-### Vercel (Recommended)
+### Netlify (Recommended)
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# Option A — Netlify CLI
+npm i -g netlify-cli
+netlify deploy --prod --dir .next
 
-# Deploy
-vercel
+# Option B — connect GitHub repo at app.netlify.com
+# Base directory: frontend
+# Build command: npm run build
+# Publish directory: .next
+# Set env var: NEXT_PUBLIC_API_URL=https://<your-render-url>/api/v1
 ```
 
 ### Docker

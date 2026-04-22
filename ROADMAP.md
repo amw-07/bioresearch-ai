@@ -15,7 +15,7 @@ Complete these once before touching any code.
 [ ] Initial commit: "Initial: V2 source — pre-conversion"
 [ ] Create branch: conversion/week-1
 [ ] Open MASTER_PLAN.md and CLAUDE_INSTRUCTIONS.md in the repo root
-[ ] Create accounts if not already done: Railway.app, Vercel (already have), Supabase, Upstash
+[ ] Create accounts if not already done: Railway.app, Netlify (app.netlify.com), Supabase, Upstash
 [ ] Confirm ANTHROPIC_API_KEY exists and has credits
 [ ] Confirm PUBMED_EMAIL is set (needed for NCBI API access)
 ```
@@ -733,7 +733,7 @@ The metrics displayed: model type and version, training date, number of training
 
 ## WEEK 4 — FRONTEND POLISH, DEPLOYMENT, README
 
-**Goal:** Complete the frontend UI audit, deploy backend to Railway and frontend to Vercel, run the Flexibility Test on the live URL, write the README as a case study.
+**Goal:** Complete the frontend UI audit, deploy backend to Railway and frontend to Netlify, run the Flexibility Test on the live URL, write the README as a case study.
 
 **Branch:** `conversion/week-4`
 
@@ -803,25 +803,29 @@ Read every visible string in every page and component. Apply the rename table fr
 
 ---
 
-### DAY 18 — Frontend Deployment (Vercel)
+### DAY 18 — Frontend Deployment (Netlify)
 
-**Prepare frontend for Vercel:**
+**Prepare frontend for Netlify:**
 
 ```
 [ ] Set NEXT_PUBLIC_API_URL in frontend/.env.example to Railway backend URL
 [ ] Ensure all API calls in lib/api/client.ts use NEXT_PUBLIC_API_URL
 [ ] Confirm next.config.js has no hardcoded localhost references
 [ ] npm run build locally with production env vars — confirm zero errors
+[ ] Confirm frontend/netlify.toml exists with @netlify/plugin-nextjs
 ```
 
 **Actually deploy:**
 
 ```
-[ ] Connect GitHub repo to Vercel (import project)
-[ ] Set environment variable in Vercel dashboard:
-    NEXT_PUBLIC_API_URL=https://bioresearch-ai-backend.up.railway.app
-[ ] Trigger Vercel deploy
-[ ] Confirm: frontend URL live at https://bioresearch-ai.vercel.app (or similar)
+[ ] Go to app.netlify.com → Add new site → Import an existing project → GitHub
+[ ] Set base directory: frontend
+[ ] Set build command: npm run build
+[ ] Set publish directory: .next
+[ ] Set environment variable in Netlify dashboard:
+    NEXT_PUBLIC_API_URL=https://bioresearch-ai-backend.up.railway.app/api/v1
+[ ] Trigger Netlify deploy
+[ ] Confirm: frontend URL live at https://bioresearch-ai.netlify.app (or similar)
 [ ] Confirm: login page loads
 [ ] Confirm: dashboard loads after auth
 [ ] Confirm: /dashboard/search loads and SemanticSearchBar is visible
@@ -910,7 +914,7 @@ The structure follows MASTER_PLAN Section 8 exactly. Fill in the real macro F1 f
 [ ] Squash messy intermediate commits on conversion branches if desired
 [ ] Tag the release: git tag v1.0.0 -m "BioResearch AI v1.0 — live"
 [ ] Push tag to GitHub
-[ ] Git commit: "Week 4 complete: Railway + Vercel deployed, Flexibility Test passed, README written"
+[ ] Git commit: "Week 4 complete: Railway + Netlify deployed, Flexibility Test passed, README written"
 ```
 
 ---

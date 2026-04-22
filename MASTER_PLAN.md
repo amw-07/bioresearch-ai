@@ -455,7 +455,7 @@ New columns on `researchers` table:
 | Service | Platform | Cost |
 |---|---|---|
 | Backend (FastAPI) | Railway.app | Free tier |
-| Frontend (Next.js) | Vercel | Free forever for personal |
+| Frontend (Next.js) | Netlify | Free forever for personal |
 | PostgreSQL | Supabase | Free (500MB) |
 | Redis | Upstash | Free (10k cmd/day) |
 | Vector DB | ChromaDB PersistentClient (embedded) | $0 |
@@ -598,4 +598,4 @@ Full scripted answers for all ten are in the Interview section of CONVERSION_PRO
 *Document version: 1.0 — locked*  
 *Source: Lead_Generation_System-main (V2), 282 files*  
 *Target: BioResearch AI, ≤80 files*  
-*Stack: FastAPI · XGBoost · SHAP · sentence-transformers · ChromaDB · Claude API · Next.js · Railway · Vercel*
+*Stack: FastAPI · XGBoost · SHAP · sentence-transformers · ChromaDB · Claude API · Next.js · Railway · Netlify*
