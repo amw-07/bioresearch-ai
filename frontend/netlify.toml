@@ -1,0 +1,15 @@
+[build]
+  command   = "npm run build"
+  publish   = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_VERSION  = "10"
+
+# Handles SSR, API routes, and image optimisation on Netlify
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Cache node_modules and Next.js build cache between deploys
+[build.cache]
+  paths = ["node_modules", ".next/cache"]

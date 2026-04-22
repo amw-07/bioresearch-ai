@@ -69,11 +69,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24      # 24 hours
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
-    FRONTEND_URL: str = "https://bioresearch-ai.vercel.app"
+    FRONTEND_URL: str = "https://bioresearch-ai.netlify.app"
 
     # ── CORS ─────────────────────────────────────────────────────────────────
     BACKEND_CORS_ORIGINS: List[str] = [
-        "https://bioresearch-ai.vercel.app",
+        "https://bioresearch-ai-frontend.onrender.com",
+        "https://bioresearch-ai.netlify.app",
         "http://localhost:3000",
         "http://localhost:8000",
     ]
