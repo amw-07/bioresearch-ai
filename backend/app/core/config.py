@@ -118,6 +118,11 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 10
     DATABASE_MAX_OVERFLOW: int = 20
     DATABASE_POOL_TIMEOUT: int = 30
+    # Timeout (seconds) for establishing DB connections (sync & async)
+    DATABASE_CONNECT_TIMEOUT: int = 30
+    # Preflight DB readiness tuning for deploys
+    DB_READY_MAX_WAIT_SECONDS: int = 60
+    DB_READY_POLL_INTERVAL: int = 2
     USE_IPV4_ONLY: bool = True
 
     # ── Redis (Upstash) ───────────────────────────────────────────────────────

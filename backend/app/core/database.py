@@ -20,7 +20,7 @@ Base = declarative_base()
 # ============================================================================
 
 SYNC_CONNECT_ARGS = {
-    "connect_timeout": 30,
+    "connect_timeout": settings.DATABASE_CONNECT_TIMEOUT,
     "keepalives": 1,
     "keepalives_idle": 30,
     "keepalives_interval": 10,
@@ -29,7 +29,8 @@ SYNC_CONNECT_ARGS = {
 }
 
 ASYNC_CONNECT_ARGS = {
-    "timeout": 10,
+    # Use configured connect timeout (seconds) for asyncpg
+    "timeout": settings.DATABASE_CONNECT_TIMEOUT,
     "command_timeout": 30,
     "server_settings": {
         "application_name": "bioresearch_ai",
