@@ -20,7 +20,12 @@ from app.api.v1.api import api_router
 from app.api.v1.health import router as health_router
 from app.core.cache import close_redis, get_async_redis
 from app.core.config import settings
-from app.core.database import check_db_connection, close_db, init_db
+from app.core.database import (
+    check_db_connection,
+    check_db_connection_sync,
+    close_db,
+    init_db,
+)
 from app.schemas.base import ErrorResponse
 
 # Configure logging
@@ -61,31 +66,35 @@ async def lifespan(app: FastAPI):
 
         # ── Pre-flight: wait for DB to accept connections ─────────────────────────
         logger.info("Checking DB reachability before migrations...")
-        MAX_WAIT = 60  # seconds total
-        INTERVAL = 5  # seconds between attempts
+        # Use configurable preflight values from settings so deploys can tune via env
+        MAX_WAIT = settings.DB_READY_MAX_WAIT_SECONDS  # seconds total
+        INTERVAL = settings.DB_READY_POLL_INTERVAL  # seconds between attempts
         waited = 0
         db_ready = False
+        # Start with configured interval and use exponential backoff with a cap
+        current_interval = INTERVAL
+        start_time = time.time()
         while waited < MAX_WAIT:
-            check = subprocess.run(
-                [
-                    "python",
-                    "-c",
-                    "from app.core.database import check_db_connection_sync; "
-                    "import sys; sys.exit(0 if check_db_connection_sync() else 1)",
-                ],
-                capture_output=True,
-                text=True,
-                cwd="/app",
-            )
-            if check.returncode == 0:
+            try:
+                check_ok = await asyncio.to_thread(check_db_connection_sync)
+            except Exception as exc:
+                logger.debug(f"Preflight sync DB check exception: {exc}")
+                check_ok = False
+
+            if check_ok:
                 db_ready = True
-                logger.info(f"✅ DB reachable after {waited}s")
+                elapsed = int(time.time() - start_time)
+                logger.info(f"✅ DB reachable after {elapsed}s")
                 break
+
+            elapsed = int(time.time() - start_time)
             logger.warning(
-                f"⏳ DB not ready yet ({waited}s elapsed), retrying in {INTERVAL}s..."
+                f"⏳ DB not ready yet ({elapsed}s elapsed), retrying in {current_interval}s..."
             )
-            time.sleep(INTERVAL)
-            waited += INTERVAL
+            await asyncio.sleep(current_interval)
+            waited = time.time() - start_time
+            # Double the interval each attempt, cap at 30s to avoid long sleeps
+            current_interval = min(current_interval * 2, 30)
 
         if not db_ready:
             logger.error("❌ DB never became reachable. Aborting migrations.")
