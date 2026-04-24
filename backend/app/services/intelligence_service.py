@@ -63,7 +63,6 @@ INTELLIGENCE_FALLBACK: Dict[str, Any] = {
 # ── Model configuration ───────────────────────────────────────────────────────
 # gemini-3-flash-preview: frontier-class performance, free on AI Studio.
 # Upgrade path: gemini-3.1-pro-preview (also available, higher quality).
-GEMINI_MODEL = "gemini-3-flash-preview"
 
 # Pydantic schema for structured output — passed as response_json_schema.
 # Using a schema instead of just response_mime_type gives Gemini tighter
@@ -73,36 +72,36 @@ INTELLIGENCE_JSON_SCHEMA = {
     "properties": {
         "research_summary": {
             "type": "string",
-            "description": "2-3 sentence summary of primary research focus and scientific contributions"
+            "description": "2-3 sentence summary of primary research focus and scientific contributions",
         },
         "domain_significance": {
             "type": "string",
-            "description": "1-2 sentences on why this research matters to the biotech/pharma field"
+            "description": "1-2 sentences on why this research matters to the biotech/pharma field",
         },
         "research_connections": {
             "type": "string",
-            "description": "1-2 sentences connecting work to drug discovery, safety, or clinical translation"
+            "description": "1-2 sentences connecting work to drug discovery, safety, or clinical translation",
         },
         "key_topics": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "3-5 specific scientific topics (e.g. hepatotoxicity biomarkers, 3D liver organoids)"
+            "description": "3-5 specific scientific topics (e.g. hepatotoxicity biomarkers, 3D liver organoids)",
         },
         "research_area_tags": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "2-3 broad domain tags (e.g. DILI, Drug Safety, In Vitro Models)"
+            "description": "2-3 broad domain tags (e.g. DILI, Drug Safety, In Vitro Models)",
         },
         "activity_level": {
             "type": "string",
             "enum": ["highly_active", "moderately_active", "emerging"],
-            "description": "Researcher activity level based on recency and output"
+            "description": "Researcher activity level based on recency and output",
         },
         "data_gaps": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Missing information that limits the analysis. Empty list if profile is complete."
-        }
+            "description": "Missing information that limits the analysis. Empty list if profile is complete.",
+        },
     },
     "required": [
         "research_summary",
@@ -111,8 +110,8 @@ INTELLIGENCE_JSON_SCHEMA = {
         "key_topics",
         "research_area_tags",
         "activity_level",
-        "data_gaps"
-    ]
+        "data_gaps",
+    ],
 }
 
 INTELLIGENCE_PROMPT = """You are an expert scientific research analyst specialising in biotech, \
@@ -180,7 +179,11 @@ def _parse_intelligence_response(raw: str) -> Dict[str, Any]:
     parsed = json.loads(raw)
 
     # Validate and normalise enum field
-    if parsed.get("activity_level") not in ("highly_active", "moderately_active", "emerging"):
+    if parsed.get("activity_level") not in (
+        "highly_active",
+        "moderately_active",
+        "emerging",
+    ):
         parsed["activity_level"] = "emerging"
 
     # Ensure list fields are lists
@@ -215,12 +218,12 @@ def _call_gemini_api(prompt: str) -> str:
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     response = client.models.generate_content(
-        model=GEMINI_MODEL,
+        model=settings.GEMINI_MODEL,
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_json_schema=INTELLIGENCE_JSON_SCHEMA,
-            temperature=0.2,        # Low temperature for factual, consistent output
+            temperature=0.2,  # Low temperature for factual, consistent output
             max_output_tokens=1024,
         ),
     )
@@ -255,16 +258,16 @@ class IntelligenceService:
             - relevance_score < 60 (low-tier gate)
         """
         if not self._is_available():
-            logger.debug(
-                "IntelligenceService: GEMINI_API_KEY not set — returning None"
-            )
+            logger.debug("IntelligenceService: GEMINI_API_KEY not set — returning None")
             return None
 
         score = researcher.relevance_score or 0
         if score < MIN_RELEVANCE_FOR_INTELLIGENCE:
             logger.debug(
                 "IntelligenceService: researcher %s score=%d < %d — skipping",
-                researcher.id, score, MIN_RELEVANCE_FOR_INTELLIGENCE,
+                researcher.id,
+                score,
+                MIN_RELEVANCE_FOR_INTELLIGENCE,
             )
             return None
 
@@ -305,14 +308,17 @@ class IntelligenceService:
         except json.JSONDecodeError as exc:
             logger.error(
                 "IntelligenceService: JSON parse failed for %s: %s\nRAW RESPONSE:\n%s",
-                researcher.id, exc, raw_response,
+                researcher.id,
+                exc,
+                raw_response,
             )
             return INTELLIGENCE_FALLBACK
 
         except Exception as exc:
             logger.error(
                 "IntelligenceService: Gemini API call failed for %s: %s",
-                researcher.id, exc,
+                researcher.id,
+                exc,
             )
             return INTELLIGENCE_FALLBACK
 

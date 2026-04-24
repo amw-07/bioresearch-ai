@@ -87,7 +87,9 @@ async def lifespan(app: FastAPI):
                     cwd="/app",
                 )
                 if retry.returncode != 0:
-                    logger.error(f"❌ Alembic migration failed after stamp:\n{retry.stderr}")
+                    logger.error(
+                        f"❌ Alembic migration failed after stamp:\n{retry.stderr}"
+                    )
                     raise RuntimeError("Alembic migration failed after stamp")
 
             logger.info("✅ Alembic migrations applied")
@@ -125,6 +127,7 @@ async def lifespan(app: FastAPI):
     # ── Step 4: Auto-create superuser ─────────────────────────────────────────
     try:
         from scripts.create_superuser import create_superuser_if_missing
+
         await create_superuser_if_missing()
     except Exception as e:
         logger.error(f"❌ Superuser creation failed: {e}")
@@ -191,7 +194,11 @@ async def lifespan(app: FastAPI):
                 else:
                     logger.info("✅ Background seed complete")
                     if result.stdout:
-                        tail = result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout
+                        tail = (
+                            result.stdout[-2000:]
+                            if len(result.stdout) > 2000
+                            else result.stdout
+                        )
                         logger.info(tail)
             except Exception as e:
                 logger.error(f"❌ Background seed error: {e}")
@@ -251,9 +258,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Trusted host (security)
 if not settings.DEBUG:
-    app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["*"]
-    )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 
 @app.middleware("http")
@@ -351,19 +356,12 @@ async def root():
     }
 
 
-@app.get("/health", include_in_schema=False)
-async def health():
-    """Redirect to health check endpoint."""
-    return {"message": "Use /health/ for detailed health checks"}
-
-
 # ============================================================================
 # API ROUTES
 # ============================================================================
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
-app.include_router(health_router, prefix="/health")
-
+app.include_router(health_router)
 
 # ============================================================================
 # RUN APPLICATION
