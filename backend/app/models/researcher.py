@@ -60,7 +60,7 @@ class Researcher(Base):
         research_area: Output of research_area_classifier.py
         domain_coverage_score: Domain keyword coverage across title + abstract (ML feature 11)
 
-        intelligence: Structured JSON from intelligence_service (Gemini 2.0 Flash)
+        intelligence: Structured JSON from intelligence_service (Gemini 3 Flash)
         intelligence_generated_at: Timestamp for Redis cache invalidation
 
         contact_confidence: Confidence of contact discovery (0–1)
@@ -161,7 +161,8 @@ class Researcher(Base):
         comment=(
             "Output of research_area_classifier.py: "
             "toxicology / drug_safety / drug_discovery / "
-            "preclinical / organoids / in_vitro / biomarkers / general_biotech"
+            "dili_hepatotoxicity / organoids_3d_models / in_vitro_models / "
+            "preclinical / biomarkers / general_biotech"
         ),
     )
     domain_coverage_score = Column(
@@ -170,7 +171,7 @@ class Researcher(Base):
         comment="Domain keyword coverage across title + abstract — ML feature 11",
     )
 
-    # ── LLM Intelligence — Component 3 (Gemini 2.0 Flash) ────────────────────
+    # ── LLM Intelligence — Component 3 (Gemini 3 Flash) ──────────────────────
     intelligence = Column(
         JSONB,
         nullable=True,

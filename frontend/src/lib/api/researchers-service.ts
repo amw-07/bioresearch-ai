@@ -37,8 +37,11 @@ export interface ModelMetrics {
 export const researchersService = {
   async semanticSearch(params: SemanticSearchParams): Promise<SemanticSearchResult> {
     const { query, research_area, n_results = 20 } = params
-    const response = await apiClient.get(API_ENDPOINTS.SEARCH_SEMANTIC, {
-      params: { query, research_area, n_results },
+    const response = await apiClient.post(API_ENDPOINTS.SEARCH, {
+      query,
+      search_type: 'pubmed',
+      filters: research_area ? { research_area } : {},
+      n_results,
     })
     return response.data
   },

@@ -14,7 +14,10 @@ interface Props {
 const AREA_COLORS: Record<string, string> = {
   toxicology: '#00f5d4',
   drug_safety: '#00bbf9',
+  dili_hepatotoxicity: '#f97316',
   drug_discovery: '#fee440',
+  organoids_3d_models: '#9b5de5',
+  in_vitro_models: '#f15bb5',
   organoids: '#9b5de5',
   in_vitro: '#f15bb5',
   biomarkers: '#00c49a',
@@ -25,7 +28,10 @@ const AREA_COLORS: Record<string, string> = {
 const AREA_LABELS: Record<string, string> = {
   toxicology: 'Toxicology',
   drug_safety: 'Drug Safety',
+  dili_hepatotoxicity: 'DILI',
   drug_discovery: 'Drug Discovery',
+  organoids_3d_models: 'Organoids',
+  in_vitro_models: 'In Vitro',
   organoids: 'Organoids',
   in_vitro: 'In Vitro',
   biomarkers: 'Biomarkers',

@@ -1,14 +1,27 @@
+import logging
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
-from app.services.scoring_service import get_scoring_service
-from app.services.embedding_service import get_embedding_service
-from app.core.database import check_db_connection
+
 from app.core.cache import get_async_redis
-from app.core.config import settings
-import logging
+from app.core.database import check_db_connection
+from app.services.embedding_service import get_embedding_service
+from app.services.scoring_service import get_scoring_service
 
 router = APIRouter(prefix="/health", tags=["Health"])
 logger = logging.getLogger(__name__)
+
+
+@router.get("/live", summary="Liveness Check")
+async def liveness_check():
+    """Lightweight process liveness endpoint for platform health checks."""
+    return {
+        "status": "ok",
+        "service": "bioresearch-ai-backend",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
 
 @router.get("/", summary="Overall Health Check")
 async def health_check():
@@ -44,6 +57,13 @@ async def health_check():
                 "checks": checks,
             },
         )
+
+
+@router.get("/ready", summary="Readiness Check")
+async def readiness_check():
+    """Dependency readiness endpoint for manual checks and monitoring."""
+    return await health_check()
+
 
 async def _check_postgresql():
     try:

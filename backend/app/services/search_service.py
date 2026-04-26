@@ -4,8 +4,8 @@ Handles search execution, history tracking, and result management.
 Scoring is delegated to ScoringService (Phase 2.5).
 """
 
+import logging
 import time
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from sqlalchemy import select
@@ -16,6 +16,8 @@ from app.models.search import Search
 from app.models.user import User
 from app.services.data_source_manager import (DataSourceType,
                                               get_data_source_manager)
+
+logger = logging.getLogger(__name__)
 
 
 class SearchService:
@@ -100,6 +102,7 @@ class SearchService:
         # Create researchers if requested
         created_researchers = []
         researcher_ids = []
+        researcher_results = []
 
         if create_researchers and aggregated:
             # Normalize the user ID before attaching it to generated researchers.
@@ -126,6 +129,11 @@ class SearchService:
 
             # Update ranks
             await self._update_researcher_ranks(user_id_str, db)
+            await self._index_created_researchers(created_researchers, db)
+            researcher_results = [
+                self._researcher_to_search_result(researcher)
+                for researcher in created_researchers
+            ]
 
         # Calculate execution time
         execution_time = int((time.time() - start_time) * 1000)
@@ -162,9 +170,101 @@ class SearchService:
             "researchers_created": len(created_researchers),
             "execution_time_ms": execution_time,
             "results": aggregated if not create_researchers else [],
+            "researchers": researcher_results,
             "researcher_ids": researcher_ids if create_researchers else [],
             "is_saved": save_search,
             "saved_name": saved_name,
+        }
+
+    async def _index_created_researchers(
+        self, researchers: List[Researcher], db: AsyncSession
+    ) -> None:
+        """Classify and index newly-created researchers for semantic search."""
+        if not researchers:
+            return
+
+        try:
+            from app.services.embedding_service import get_embedding_service
+            from app.services.research_area_classifier import (
+                classify_research_area,
+                compute_domain_coverage_score,
+            )
+
+            embedding_service = get_embedding_service()
+            for researcher in researchers:
+                abstract = researcher.abstract_text or researcher.publication_title
+                title = researcher.title or researcher.publication_title
+                researcher.research_area = researcher.research_area or classify_research_area(
+                    title, abstract
+                )
+                researcher.domain_coverage_score = (
+                    researcher.domain_coverage_score
+                    if researcher.domain_coverage_score is not None
+                    else compute_domain_coverage_score(title, abstract)
+                )
+                researcher.abstract_relevance_score = (
+                    researcher.abstract_relevance_score
+                    if researcher.abstract_relevance_score is not None
+                    else await embedding_service.compute_abstract_relevance(title, abstract)
+                )
+                researcher.abstract_embedding_id = await embedding_service.index_researcher(
+                    researcher_id=str(researcher.id),
+                    title=title,
+                    abstract=abstract,
+                    research_area=researcher.research_area,
+                    name=researcher.name,
+                )
+                db.add(researcher)
+
+            await db.commit()
+        except Exception as exc:
+            logger.warning("Semantic indexing failed after search: %s", exc)
+
+    @staticmethod
+    def _researcher_to_search_result(researcher: Researcher) -> Dict:
+        return {
+            "id": str(researcher.id),
+            "user_id": str(researcher.user_id),
+            "name": researcher.name,
+            "title": researcher.title,
+            "company": researcher.company,
+            "location": researcher.location,
+            "email": researcher.email,
+            "phone": researcher.phone,
+            "linkedin_url": researcher.linkedin_url,
+            "relevance_score": researcher.relevance_score,
+            "rank": researcher.rank,
+            "relevance_tier": researcher.relevance_tier or researcher.get_relevance_tier(),
+            "recent_publication": bool(researcher.recent_publication),
+            "publication_year": researcher.publication_year,
+            "publication_title": researcher.publication_title,
+            "publication_count": researcher.publication_count or 0,
+            "company_funding": researcher.company_funding,
+            "company_size": researcher.company_size,
+            "uses_3d_models": bool(researcher.uses_3d_models),
+            "data_sources": researcher.data_sources or [],
+            "tags": researcher.tags or [],
+            "notes": researcher.notes,
+            "status": researcher.status,
+            "abstract_text": researcher.abstract_text,
+            "abstract_embedding_id": researcher.abstract_embedding_id,
+            "abstract_relevance_score": researcher.abstract_relevance_score,
+            "research_area": researcher.research_area,
+            "domain_coverage_score": researcher.domain_coverage_score,
+            "relevance_confidence": researcher.relevance_confidence,
+            "shap_contributions": researcher.shap_contributions,
+            "intelligence": researcher.intelligence,
+            "intelligence_generated_at": (
+                researcher.intelligence_generated_at.isoformat()
+                if researcher.intelligence_generated_at
+                else None
+            ),
+            "created_at": (
+                researcher.created_at.isoformat() if researcher.created_at else None
+            ),
+            "updated_at": (
+                researcher.updated_at.isoformat() if researcher.updated_at else None
+            ),
         }
 
     def _calculate_default_score(self, researcher: Researcher) -> int:
@@ -347,6 +447,8 @@ class SearchService:
                 company=researcher_dict.get("company"),
                 location=researcher_dict.get("location"),
                 email=researcher_dict.get("email"),
+                abstract_text=researcher_dict.get("abstract_text")
+                or researcher_dict.get("abstract"),
                 recent_publication=researcher_dict.get("recent_publication", False),
                 status="NEW",
             )

@@ -48,7 +48,7 @@ async def get_dashboard_stats(
         'research_areas_covered': len(area_breakdown),
         'queries_today': 0,
         'area_breakdown': area_breakdown,
-        'model_version': model_meta.get('model_type', 'XGBoost v1'),
+        'model_version': model_meta.get('model_type', 'RandomForest v1'),
         'model_trained_at': model_meta.get('trained_at'),
         'n_training_samples': model_meta.get('n_training_samples'),
         'macro_f1': model_meta.get('macro_f1'),

@@ -6,7 +6,6 @@ Test search execution, history, and result management
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.lead import Lead
 from app.models.search import Search
 from app.models.user import User
 from app.services.search_service import get_search_service
@@ -48,12 +47,12 @@ class TestSearchService:
             search_type="pubmed",
             user=test_user,
             db=db_session,
-            create_leads=True,
+            create_researchers=True,
             max_results=3,
         )
 
-        assert result["leads_created"] >= 0
-        assert len(result["lead_ids"]) == result["leads_created"]
+        assert result["researchers_created"] >= 0
+        assert len(result["researcher_ids"]) == result["researchers_created"]
 
     async def test_execute_search_with_filters(
         self, db_session: AsyncSession, test_user: User

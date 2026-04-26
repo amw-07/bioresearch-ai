@@ -4,6 +4,7 @@ Execute searches, manage search history, view results
 """
 
 import logging
+from datetime import datetime
 from typing import Dict, List, Optional
 from uuid import UUID
 
@@ -11,11 +12,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import check_search_quota, get_current_active_user, get_db, get_optional_user
+from app.core.deps import (
+    check_search_quota,
+    get_current_active_user,
+    get_db,
+    get_optional_user,
+)
+from app.core.security import get_password_hash
 from app.models.search import Search
 from app.models.user import User
-from app.schemas.base import (MessageResponse, PaginatedResponse,
-                              SuccessResponse)
+from app.schemas.base import MessageResponse, PaginatedResponse, SuccessResponse
 from app.schemas.search import SearchCreate, SearchResponse
 from app.services.data_quality_service import get_data_quality_service
 from app.services.data_source_manager import get_data_source_manager
@@ -24,6 +30,27 @@ from app.utils.rate_limiter import search_limiter
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+GUEST_SEARCH_EMAIL = "guest@bioresearch.ai"
+
+
+async def _get_or_create_guest_user(db: AsyncSession) -> User:
+    result = await db.execute(select(User).where(User.email == GUEST_SEARCH_EMAIL))
+    user = result.scalar_one_or_none()
+    if user:
+        return user
+
+    user = User(
+        email=GUEST_SEARCH_EMAIL,
+        password_hash=get_password_hash("guest-search-disabled"),
+        full_name="Guest Search",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 # ============================================================================
@@ -59,33 +86,49 @@ async def execute_search(
     embedding_svc = get_embedding_service()
     query = search_data.query
     research_area_filter = (search_data.filters or {}).get("research_area")
+    search_user = current_user or await _get_or_create_guest_user(db)
 
     try:
         pubmed_results = await service.execute_search(
             query=query,
             search_type=search_data.search_type,
-            user=current_user,
+            user=search_user,
             db=db,
             filters=search_data.filters,
             save_search=search_data.save_search,
             saved_name=search_data.saved_name,
-            create_leads=True,  # Always create researchers for now
-            max_results=50,
+            create_researchers=True,
+            max_results=search_data.n_results,
         )
 
-        semantic_hits = await embedding_svc.semantic_search(
-            query=query,
-            n_results=50,
-            research_area_filter=research_area_filter,
-        )
+        try:
+            semantic_hits = await embedding_svc.semantic_search(
+                query=query,
+                n_results=search_data.n_results,
+                research_area_filter=research_area_filter,
+            )
+        except Exception:
+            logger.exception("Semantic search unavailable")
+            results_count = pubmed_results.get("results_count", 0)
+            return {
+                **pubmed_results,
+                "quota": quota,
+                "researchers": pubmed_results.get("researchers", []),
+                "semantic_search_available": False,
+                "message": (
+                    f"Found {results_count} results. "
+                    "Semantic search is temporarily unavailable; returning source results."
+                ),
+            }
 
         if not semantic_hits:
             return {
                 **pubmed_results,
                 "quota": quota,
+                "researchers": pubmed_results.get("researchers", []),
                 "semantic_search_available": False,
                 "message": (
-                    f"Found {pubmed_results['results_count']} results. "
+                    f"Found {pubmed_results.get('results_count', 0)} results. "
                     "Semantic search will be available after researchers are enriched."
                 ),
             }
@@ -96,7 +139,7 @@ async def execute_search(
         result = await db.execute(
             select(ResearcherModel).where(
                 ResearcherModel.id.in_(semantic_ids),
-                ResearcherModel.user_id == current_user.id,
+                ResearcherModel.user_id == search_user.id,
             )
         )
         researchers = result.scalars().all()
@@ -366,7 +409,11 @@ async def save_search(
 )
 async def rerun_search(
     search_id: UUID,
-    create_leads: bool = Query(True, description="Create new researchers"),
+    create_researchers: bool = Query(
+        True,
+        alias="create_leads",
+        description="Create new researchers",
+    ),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -387,7 +434,7 @@ async def rerun_search(
             search_id=str(search_id),
             user=current_user,
             db=db,
-            create_leads=create_leads,
+            create_researchers=create_researchers,
         )
 
         return {

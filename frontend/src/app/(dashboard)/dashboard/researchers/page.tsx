@@ -15,7 +15,10 @@ import { Researcher } from '@/types/researcher';
 const AREA_LABELS: Record<string, string> = {
   toxicology: 'Toxicology',
   drug_safety: 'Drug Safety',
+  dili_hepatotoxicity: 'DILI',
   drug_discovery: 'Drug Discovery',
+  organoids_3d_models: 'Organoids',
+  in_vitro_models: 'In Vitro',
   organoids: 'Organoids',
   in_vitro: 'In Vitro',
   biomarkers: 'Biomarkers',

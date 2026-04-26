@@ -3,14 +3,14 @@
 ## Complete Setup Checklist
 
 ### Phase 1: Project Initialization
-- Next.js 14 project created with TypeScript
+- Next.js 16 project created with TypeScript
 - Dependencies installed
 - Folder structure created
 - Configuration files present:
   - `next.config.js`
   - `tailwind.config.ts`
   - `tsconfig.json`
-  - `.eslintrc.json`
+  - `eslint.config.mjs`
   - `postcss.config.js`
   - `.prettierrc`
 

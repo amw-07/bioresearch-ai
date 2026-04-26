@@ -17,6 +17,7 @@ class SearchCreate(BaseModel):
     query: str = Field(..., min_length=1, description="Search query")
     search_type: str = Field(..., description="pubmed, linkedin, conference, etc.")
     filters: Dict[str, Any] = Field(default_factory=dict, description="Applied filters")
+    n_results: int = Field(20, ge=1, le=100, description="Maximum results to return")
     save_search: bool = Field(default=False, description="Save this search")
     saved_name: Optional[str] = Field(
         None, max_length=255, description="Name for saved search"
@@ -28,6 +29,7 @@ class SearchCreate(BaseModel):
                 "query": "drug-induced liver injury 3D models",
                 "search_type": "pubmed",
                 "filters": {"years": [2023, 2024]},
+                "n_results": 20,
                 "save_search": True,
                 "saved_name": "DILI Research 2024",
             }

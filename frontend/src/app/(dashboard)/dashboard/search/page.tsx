@@ -12,9 +12,10 @@ import { Eye } from 'lucide-react';
 const AREA_LABELS: Record<string, string> = {
   toxicology: 'Toxicology',
   drug_safety: 'Drug Safety',
+  dili_hepatotoxicity: 'DILI',
   drug_discovery: 'Drug Discovery',
-  organoids: 'Organoids',
-  in_vitro: 'In Vitro',
+  organoids_3d_models: 'Organoids',
+  in_vitro_models: 'In Vitro',
   biomarkers: 'Biomarkers',
   preclinical: 'Preclinical',
   general_biotech: 'General Biotech',
@@ -103,16 +104,18 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<SemanticSearchResult | null>(null)
   const [quota, setQuota] = useState<SearchQuota | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const runSearch = async (query: string, researchArea: string) => {
     setLoading(true)
+    setError(null)
     try {
       const payload = await researchersService.semanticSearch({
         query,
         research_area: researchArea === 'all' ? undefined : researchArea,
         n_results: 50,
       })
-      setResult(payload)
+      setResult({ ...payload, researchers: payload.researchers ?? [] })
       if (payload.quota) {
         setQuota(payload.quota)
       }
@@ -126,6 +129,15 @@ export default function SearchPage() {
             searches_limit: detail.searches_limit,
           })
         }
+        setError(detail?.message || 'Daily search limit reached.')
+      } else if (err?.response?.status === 401) {
+        setError('Please sign in to use this search mode.')
+      } else {
+        setError(
+          err?.response?.data?.detail ||
+            err?.response?.data?.message ||
+            'Search failed. The backend may still be starting up.'
+        )
       }
     } finally {
       setLoading(false)
@@ -148,6 +160,12 @@ export default function SearchPage() {
       )}
 
       <SemanticSearchBar loading={loading} onSearch={runSearch} />
+
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       {result && (
         <Card>
