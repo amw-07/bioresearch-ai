@@ -113,7 +113,8 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test_biotech_leads
+          DATABASE_URL: postgresql://test:test@localhost:6543/test_biotech_leads
+          MIGRATION_DATABASE_URL: postgresql://test:test@localhost:5432/test_biotech_leads
           REDIS_URL: redis://localhost:6379/1
           SECRET_KEY: test-secret-key
           TESTING: true
@@ -220,7 +221,7 @@ jobs:
 
       - name: Run Database Migrations
         env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
         run: |
           cd backend
           alembic upgrade head
