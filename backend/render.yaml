@@ -10,7 +10,7 @@ services:
       - key: RENDER
         value: "1"
       - key: SEED_ON_STARTUP
-        value: false
+        value: true
       - key: DATABASE_URL
         sync: false
       - key: MIGRATION_DATABASE_URL
