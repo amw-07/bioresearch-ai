@@ -7,6 +7,7 @@ migration_url = os.environ.get("MIGRATION_DATABASE_URL") or os.environ.get("DATA
 config.set_main_option("sqlalchemy.url", migration_url)
 
 import sys
+from pathlib import Path
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool, text
@@ -14,7 +15,7 @@ from sqlalchemy import engine_from_config, pool, text
 from alembic import context
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, str(Path(__file__).parents[1]))
 
 # Load .env file if it exists (before any config imports)
 try:
@@ -56,82 +57,12 @@ if config.config_file_name is not None:
 # Set target metadata for autogenerate
 target_metadata = Base.metadata
 
-# Get database URL with IPv4 enforcement
-database_url = get_database_url(force_ipv4=True)
+# Get database URL with IPv4 enforcement from central config helper
+# This applies IPv4 resolution for both MIGRATION_DATABASE_URL and DATABASE_URL.
+migration_db_url = get_database_url(force_ipv4=True)
+config.set_main_option("sqlalchemy.url", migration_db_url)
+print(f"[INFO] Using database URL: {migration_db_url.split('@')[0]}@...")
 
-import socket
-# Additional IPv4 resolution attempt if the URL still contains hostname
-from urllib.parse import urlparse, urlunparse
-
-parsed = urlparse(database_url)
-if parsed.hostname and not parsed.hostname.replace(".", "").isdigit():
-    # Check for manual IPv4 override via environment variable
-    ipv4_override = os.getenv("DATABASE_IPV4_ADDRESS")
-    if ipv4_override:
-        print(f"[OK] Using IPv4 address from DATABASE_IPV4_ADDRESS: {ipv4_override}")
-        ipv4_address = ipv4_override
-    else:
-        # Try to resolve to IPv4 using multiple methods
-        ipv4_address = None
-
-        # Method 1: Try getaddrinfo with IPv4 only
-        try:
-            addr_info = socket.getaddrinfo(
-                parsed.hostname,
-                parsed.port or 5432,
-                socket.AF_INET,  # Force IPv4
-                socket.SOCK_STREAM,
-            )
-            if addr_info:
-                ipv4_address = addr_info[0][4][0]
-                print(f"[OK] Resolved {parsed.hostname} to IPv4: {ipv4_address}")
-        except Exception as e:
-            print(f"[WARN] Method 1 failed: {e}")
-
-        # Method 2: Try gethostbyname (legacy, but sometimes works)
-        if not ipv4_address:
-            try:
-                ipv4_address = socket.gethostbyname(parsed.hostname)
-                # Verify it's actually IPv4
-                socket.inet_aton(ipv4_address)
-                print(
-                    f"[OK] Resolved {parsed.hostname} to IPv4 (method 2): {ipv4_address}"
-                )
-            except Exception as e:
-                print(f"[WARN] Method 2 failed: {e}")
-
-    # If we got an IPv4 address, update the URL
-    if ipv4_address:
-        netloc = f"{parsed.username}:{parsed.password}@{ipv4_address}"
-        if parsed.port:
-            netloc += f":{parsed.port}"
-        database_url = urlunparse(
-            (
-                parsed.scheme,
-                netloc,
-                parsed.path,
-                parsed.params,
-                parsed.query,
-                parsed.fragment,
-            )
-        )
-    else:
-        print(f"[WARN] Could not resolve {parsed.hostname} to IPv4")
-        print(f"[WARN] Will try using hostname directly (may use IPv6 if available)")
-        print(f"\n[TIP] Alternative Solutions:")
-        print(f"   1. Use Supabase Connection Pooler (better IPv4 support):")
-        print(
-            f"      Change hostname from 'db.xxx.supabase.co' to 'aws-0-xx.pooler.supabase.com'"
-        )
-        print(f"   2. Use Supabase Direct Connection with IPv4:")
-        print(
-            f"      Get connection string from: Supabase Dashboard > Settings > Database"
-        )
-        print(f"   3. Enable IPv6 on your network/VPN")
-        print(f"   4. Use a different network environment")
-
-config.set_main_option("sqlalchemy.url", database_url)
-print(f"[INFO] Using database URL: {database_url.split('@')[0]}@...")
 
 
 def run_migrations_offline() -> None:

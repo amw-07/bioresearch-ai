@@ -207,23 +207,20 @@ settings = Settings()
 
 
 def get_database_url(force_ipv4: bool = None) -> str:
-    """Get database URL with optional IPv4 enforcement."""
-    migration_url = settings.MIGRATION_DATABASE_URL
-    if migration_url:
-        url = migration_url
-        if url.startswith("postgresql://"):
-            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
-        return url
+    """Get database URL with optional IPv4 enforcement.
 
-    # ── Fall back to DATABASE_URL (original behaviour)
+    Priority: MIGRATION_DATABASE_URL > DATABASE_URL
+    IPv4 enforcement applies to BOTH to ensure Render compatibility.
+    Supabase direct host (db.*.supabase.co) resolves to IPv6 on some DNS servers;
+    force_ipv4=True rewrites the hostname to its IPv4 address before connecting.
+    """
     if force_ipv4 is None:
         force_ipv4 = settings.USE_IPV4_ONLY
 
-    url = settings.DATABASE_URL
+    # Pick the right URL source
+    raw_url = settings.MIGRATION_DATABASE_URL or settings.DATABASE_URL
 
-    # Guard: if DATABASE_URL is not set, return a harmless placeholder
-    # and emit a warning so imports don't crash with AttributeError.
-    if not url:
+    if not raw_url:
         import warnings
 
         warnings.warn(
@@ -234,11 +231,15 @@ def get_database_url(force_ipv4: bool = None) -> str:
         )
         return "postgresql+psycopg2://localhost/bioresearch_placeholder"
 
-    if url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
-    elif url.startswith("postgresql+asyncpg://"):
-        url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+    # Normalise driver prefix to psycopg2 for sync use
+    if raw_url.startswith("postgresql://"):
+        url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    elif raw_url.startswith("postgresql+asyncpg://"):
+        url = raw_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+    else:
+        url = raw_url
 
+    # Rewrite hostname -> IPv4 so Render (no IPv6) can connect
     if force_ipv4:
         from urllib.parse import urlparse, urlunparse
 
