@@ -139,7 +139,7 @@ class UserProfile(UserBase, TimestampSchema):
                 "is_verified": True,
                 "last_login_at": "2024-12-30T12:00:00Z",
                 "usage_stats": {
-                    "leads_created_this_month": 45,
+                    "researchers_created_this_month": 45,
                     "searches_this_month": 12,
                 },
                 "preferences": {"theme": "dark", "email_notifications": True},
@@ -342,8 +342,8 @@ class UserUsageStats(BaseSchema):
     User usage statistics
     """
 
-    leads_created_this_month: int
-    leads_limit_per_month: int
+    researchers_created_this_month: int
+    researchers_limit_per_month: int
     searches_this_month: int
     exports_this_month: int
     api_calls_today: int
@@ -352,8 +352,8 @@ class UserUsageStats(BaseSchema):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "leads_created_this_month": 45,
-                "leads_limit_per_month": 100,
+                "researchers_created_this_month": 45,
+                "researchers_limit_per_month": 100,
                 "searches_this_month": 12,
                 "exports_this_month": 5,
                 "api_calls_today": 150,

@@ -17,8 +17,8 @@
 | Explainability | SHAP `TreeExplainer` | Exact Shapley values |
 | Embeddings | `sentence-transformers/all-MiniLM-L6-v2` | Local, zero API cost |
 | Vector DB | ChromaDB `PersistentClient` | Embedded in FastAPI process |
-| LLM Intelligence | Gemini 2.0 Flash | Free tier · 1,500 req/day · $0 |
-| Frontend | Next.js 14 · TypeScript · Tailwind CSS | Netlify deployment |
+| LLM Intelligence | Gemini 3 Flash Preview | Free tier via Google AI Studio |
+| Frontend | Next.js 16 · TypeScript · Tailwind CSS | Netlify deployment |
 | Database | PostgreSQL (Supabase) | Single `researchers` table |
 | Cache | Redis (Upstash) | 30-day LLM intelligence TTL |
 | Deployment | Render.com (backend) · Netlify (frontend) | Free tier both |
@@ -160,7 +160,7 @@ A rule-based keyword coverage scorer assigns each researcher to one of 8 domains
 ### Component 3 — LLM Researcher Intelligence
 
 **File:** `backend/app/services/intelligence_service.py`  
-**Model:** Gemini 2.0 Flash (Google AI Studio free tier)
+**Model:** Gemini 3 Flash Preview (Google AI Studio free tier)
 
 For each researcher with `relevance_score >= 60`, generates a structured JSON intelligence summary via the Gemini API.
 
@@ -180,7 +180,7 @@ For each researcher with `relevance_score >= 60`, generates a structured JSON in
 **Why `relevance_score >= 60` as gate:**  
 Profiles below 60 are Low tier — the LLM output quality for borderline profiles is lower because the abstract data is sparse, and the API call cost (even at $0) is not justified.
 
-**Why Gemini 2.0 Flash:**  
+**Why Gemini 3 Flash Preview:**
 - Free at 1,500 requests per day via Google AI Studio — no credit card, no trial expiry
 - `response_mime_type="application/json"` instructs the model to return clean JSON, eliminating the most common failure mode in structured extraction (malformed fences, trailing commas)
 - Swap to Gemini 2.5 Flash by changing one config string (`GEMINI_MODEL`)
@@ -294,7 +294,7 @@ scoring_service.score()                    ← Components 1 + 4
   ▼
 intelligence_service.generate()            ← Component 3
   │  gate: relevance_score >= 60
-  │  Gemini 2.0 Flash API call (or Redis cache hit)
+  │  Gemini 3 Flash API call (or Redis cache hit)
   │  structured JSON → researchers.intelligence JSONB column
   │
   ▼
@@ -347,11 +347,11 @@ The training script compares three models. If Logistic Regression had won the co
 **Why 60/40 hybrid ranking and not 100% semantic or 100% ML score:**  
 Pure semantic similarity can surface very relevant abstracts from researchers with no seniority, no funding, and no publications in the last 5 years. Pure ML score can surface "qualified-looking" researchers whose work is semantically distant from the query. The 60/40 split approximates the balance between query relevance (semantic) and profile quality (ML). The ratio is tunable — no theoretical basis for 60/40 other than empirical testing on the demo dataset.
 
-**Why Gemini 2.0 Flash and not GPT-4o or Claude Haiku:**  
-- Gemini 2.0 Flash is genuinely free at 1,500 requests per day via Google AI Studio — no credit card, no trial expiry, no usage-based billing
+**Why Gemini 3 Flash Preview and not GPT-4o or Claude Haiku:**
+- Gemini 3 Flash Preview is available through Google AI Studio and keeps the demo on a no-cost LLM path
 - `response_mime_type="application/json"` produces clean JSON without markdown fences — eliminates the primary parse failure mode
 - The intelligence output is a structured summary, not creative writing — model quality differences at this task are negligible
-- Upgrade path is one string change (`GEMINI_MODEL=gemini-2.5-flash`) with no code changes
+- Fallback path is one config change (`GEMINI_MODEL=gemini-2.5-flash`) with no code changes
 
 ---
 
@@ -505,7 +505,7 @@ bioresearch-ai/
 │   │   └── services/
 │   │       ├── scoring_service.py   Component 1 — MLScoringService + SHAP (Component 4)
 │   │       ├── embedding_service.py Component 2 — sentence-transformers + ChromaDB
-│   │       ├── intelligence_service.py Component 3 — Gemini 2.0 Flash
+│   │       ├── intelligence_service.py Component 3 — Gemini 3 Flash
 │   │       ├── research_area_classifier.py  8-domain keyword classifier
 │   │       ├── pubmed_service.py    PubMed / NCBI Entrez data source
 │   │       ├── enrichment_service.py  orchestrates the full pipeline
@@ -548,7 +548,7 @@ bioresearch-ai/
 ## Common interview questions
 
 **"Walk me through the architecture."**  
-PubMed data comes in via the NCBI Entrez API. Each profile goes through four stages: research area classification (rule-based, deterministic), embedding into ChromaDB with a domain context prefix, ML scoring with RandomForest using 18 structured features, and LLM intelligence generation via Gemini 2.0 Flash. At search time, the user's query is embedded with the same prefix, ChromaDB returns the top-K nearest profiles by cosine similarity, and those are re-ranked with a 60/40 hybrid score combining semantic similarity with the ML relevance score. The frontend shows the SHAP breakdown for every scored profile.
+PubMed data comes in via the NCBI Entrez API. Each profile goes through four stages: research area classification (rule-based, deterministic), embedding into ChromaDB with a domain context prefix, ML scoring with RandomForest using 18 structured features, and LLM intelligence generation via Gemini 3 Flash. At search time, the user's query is embedded with the same prefix, ChromaDB returns the top-K nearest profiles by cosine similarity, and those are re-ranked with a 60/40 hybrid score combining semantic similarity with the ML relevance score. The frontend shows the SHAP breakdown for every scored profile.
 
 **"How is this different from just searching PubMed?"**  
 PubMed keyword search is boolean — a query either matches a paper's MeSH terms and abstract keywords or it doesn't. `"microphysiological system"` will not return papers that only use `"organ-on-chip"`. Semantic search with sentence-transformers understands that these terms describe the same concept. The ML scorer adds a second dimension that PubMed doesn't have at all: it predicts the researcher's overall relevance based on seniority, NIH funding, publication recency, and domain keyword coverage — independent of whether their abstracts match the current query.

@@ -49,8 +49,53 @@ export function ModelMetricsDashboard({ metrics, isLoading = false }: Props) {
 
       <Card>
         <CardHeader><CardTitle>Confusion Matrix</CardTitle></CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          {metrics.confusion_matrix?.length ? JSON.stringify(metrics.confusion_matrix) : 'No confusion matrix available.'}
+        <CardContent>
+          {metrics.confusion_matrix?.length ? (
+            <div className="overflow-x-auto">
+              {/* Column header labels */}
+              <div className="mb-1 ml-16 grid gap-1" style={{ gridTemplateColumns: `repeat(${metrics.confusion_matrix[0].length}, minmax(0, 1fr))` }}>
+                {['high', 'medium', 'low'].slice(0, metrics.confusion_matrix[0].length).map((label) => (
+                  <div key={label} className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    {label}
+                  </div>
+                ))}
+              </div>
+              {/* Row labels + cells */}
+              {metrics.confusion_matrix.map((row: number[], rowIdx: number) => {
+                const rowLabel = ['high', 'medium', 'low'][rowIdx] ?? `Class ${rowIdx}`;
+                const maxVal = Math.max(...metrics.confusion_matrix.flat());
+                return (
+                  <div key={rowIdx} className="mb-1 flex items-center gap-1">
+                    <div className="w-14 shrink-0 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {rowLabel}
+                    </div>
+                    <div className="grid flex-1 gap-1" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
+                      {row.map((val, colIdx) => {
+                        const intensity = maxVal > 0 ? val / maxVal : 0;
+                        const bg = rowIdx === colIdx
+                          ? `rgba(34,197,94,${0.15 + intensity * 0.65})`   // green diagonal
+                          : `rgba(239,68,68,${intensity * 0.55})`;          // red off-diagonal
+                        return (
+                          <div
+                            key={colIdx}
+                            className="flex h-12 items-center justify-center rounded text-sm font-bold"
+                            style={{ backgroundColor: bg }}
+                          >
+                            {val}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="mt-2 text-xs text-muted-foreground">
+                Rows = Actual class · Columns = Predicted class · Diagonal = correct predictions
+              </p>
+            </div>
+          ) : (
+            <span className="text-sm text-muted-foreground">No confusion matrix available.</span>
+          )}
         </CardContent>
       </Card>
 

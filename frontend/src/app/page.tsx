@@ -29,7 +29,7 @@ export default function Home() {
         <h1 className="max-w-4xl text-5xl font-bold leading-tight">Discover and rank biotech researchers with explainable AI.</h1>
         <p className="mt-6 max-w-2xl text-slate-300">
           BioResearch AI discovers, ranks, and explains biotech researchers from PubMed using
-          four real ML components — semantic search, XGBoost scoring, SHAP explainability,and Claude-powered research intelligence.</p>
+          four real ML components - semantic search, RandomForest scoring, SHAP explainability, and Gemini-powered research intelligence.</p>
         <div className="mt-4 flex items-center gap-6 text-sm text-slate-400">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
@@ -42,7 +42,7 @@ export default function Home() {
         </div>
         <div className="mt-8 flex gap-4">
           <Link href="/dashboard/search" className="rounded-lg bg-emerald-400 px-5 py-3 font-semibold text-slate-950 inline-flex items-center gap-2">
-            Try it now — no sign up <ArrowRight className="h-4 w-4" />
+            Try it now - no sign up <ArrowRight className="h-4 w-4" />
           </Link>
           <Link href="/register" className="rounded-lg border border-slate-700 px-5 py-3 text-slate-300">
             Create free account

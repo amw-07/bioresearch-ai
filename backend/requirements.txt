@@ -922,7 +922,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
-tzdata==2025.3
+tzdata>=2023.3
     # via
     #   bioresearch-ai
     #   pandas

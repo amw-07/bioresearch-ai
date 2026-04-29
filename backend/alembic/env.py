@@ -3,6 +3,9 @@ Alembic migration environment with IPv4 enforcement
 """
 
 import os
+migration_url = os.environ.get("MIGRATION_DATABASE_URL") or os.environ.get("DATABASE_URL")
+config.set_main_option("sqlalchemy.url", migration_url)
+
 import sys
 from pathlib import Path
 from logging.config import fileConfig

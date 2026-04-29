@@ -149,7 +149,7 @@ dependencies = [
     "tomlkit==0.13.3",
     "traitlets==5.14.3",
     "typing-extensions==4.15.0",
-    "tzdata==2025.3",
+    "tzdata>=2023.3",
     "upstash-redis==0.15.0",
     "urllib3==2.6.2",
     "uvicorn==0.27.0",

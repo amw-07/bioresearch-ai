@@ -644,6 +644,8 @@ class PubMedService:
             recent_publication=pubmed_researcher.get("recent_publication", True),
             publication_year=pubmed_researcher.get("publication_year"),
             publication_title=pubmed_researcher.get("publication_title"),
+            abstract_text=pubmed_researcher.get("abstract_text")
+            or pubmed_researcher.get("abstract"),
             publication_count=1,
             company_funding=pubmed_researcher.get("company_funding", "Unknown"),
             uses_3d_models=pubmed_researcher.get("uses_3d_models", True),

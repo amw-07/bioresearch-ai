@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
- import'./globals.css'
+import './globals.css'
 import { QueryProvider } from '@/providers/query-provider';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: '%s — BioResearch AI',
   },
   description:
-    'AI-powered biotech research intelligence. Discover and rank researchers by relevance using XGBoost, sentence-transformers, and SHAP explanations.',
+    'AI-powered biotech research intelligence. Discover and rank researchers by relevance using RandomForest, sentence-transformers, and SHAP explanations.',
   keywords: [
     'biotech research intelligence',
     'researcher discovery',
@@ -32,9 +32,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <QueryProvider>{children}</QueryProvider>
         <Toaster />
-
-        <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fbioresearc8001back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.18" />
-        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" /></body>
+      </body>
     </html>
   )
 }

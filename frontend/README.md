@@ -85,7 +85,7 @@ frontend/
 ## 🛠️ Technology Stack
 
 ### Core
-- **Next.js 14** - React framework with Server Components
+- **Next.js 16** - React framework with Server Components
 - **React 18** - UI library
 - **TypeScript 5** - Type safety
 

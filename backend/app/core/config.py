@@ -142,7 +142,7 @@ class Settings(BaseSettings):
     PUBMED_MAX_RESULTS_PER_QUERY: int = 50
 
     # ── LLM Intelligence — Component 3 ───────────────────────────────────────
-    # Google Gemini 2.0 Flash (FREE via Google AI Studio)
+    # Google Gemini 3 Flash (free via Google AI Studio)
     # Get key: https://aistudio.google.com/app/apikey
     # Free tier: 15 req/min · 1M tokens/min · 1,500 req/day · $0
     # Optional — if absent, intelligence_service returns None gracefully.
@@ -152,7 +152,7 @@ class Settings(BaseSettings):
 
     # Gemini model identifier.
     # gemini-3-flash-preview — free, fast, excellent structured JSON output.
-    # gemini-2.5-flash — upgrade path (also free on AI Studio).
+    # gemini-2.5-flash — stable fallback option.
     GEMINI_MODEL: str = "gemini-3-flash-preview"
 
     # ── Deployment control ────────────────────────────────────────────────────
