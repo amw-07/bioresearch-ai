@@ -4,17 +4,18 @@ MLScoringService — Component 1 of BioResearch AI.
 Replaces the arithmetic weighted sum shim from Week 1 with real ML inference.
 
 Architecture:
-- Loads scorer_v1.joblib (scikit-learn Pipeline: StandardScaler + RandomForest)
+- Loads scorer_v1.joblib (scikit-learn Pipeline: StandardScaler + RandomForestClassifier)
   once at class instantiation time. Stays in memory — not reloaded per request.
-  The model winner is selected at train time by comparing LR vs RandomForest vs XGBoost;
-  eval_v1.json records the actual winner. Current winner: RandomForest (92.5% accuracy).
+  The production model is RandomForest (92.5% accuracy on the held-out test set).
+  Training compares LR, RandomForest, and XGBoost; the winner is persisted to
+  scorer_v1.joblib and recorded in eval_v1.json. The current winner is RandomForest.
 - Extracts 18 features from the Researcher SQLAlchemy model.
 - Calls model.predict() + predict_proba() for score and tier.
 - Calls SHAP TreeExplainer for top-5 feature contributions.
 
 SHAP shape note (important for interview):
   shap.TreeExplainer returns shap_values of shape (n_classes, n_samples, n_features)
-  for tree-based models (RandomForest, XGBoost — both supported).
+  for RandomForest and other tree-based models.
   For a single sample: shap_values[class_idx][0][feature_idx]
   class_idx = the index of the PREDICTED class in label_encoder.classes_
   This is NOT the same as the highest-probability class in every case —
